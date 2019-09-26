@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/digitalocean/dodb-operator/mocks"
 	doopv1alpha1 "github.com/digitalocean/dodb-operator/pkg/apis/doop/v1alpha1"
@@ -19,11 +20,10 @@ import (
 
 // https://github.com/operator-framework/operator-sdk/blob/master/doc/user/unit-testing.md
 
-func TestDatabaseControllerCreate(t *testing.T) {
+func TestDatabaseControllerCreateDelete(t *testing.T) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	s.AddKnownTypes(doopv1alpha1.SchemeGroupVersion, &doopv1alpha1.Database{})
-	s.AddKnownTypes(doopv1alpha1.SchemeGroupVersion, &doopv1alpha1.DatabaseList{})
 
 	example := &doopv1alpha1.Database{
 		ObjectMeta: metav1.ObjectMeta{
@@ -102,4 +102,16 @@ func TestDatabaseControllerCreate(t *testing.T) {
 		MaintenanceWindow: &doopv1alpha1.DatabaseMaintenanceWindow{},
 		Status:            databaseStatusOnline,
 	}, database.Status)
+
+	// Delete the object and ensure the resource is deleted from DO.
+	mockDatabasesService.EXPECT().Delete(gomock.Any(), fakeDatabase.ID).Return(nil, nil).Times(1)
+
+	database.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+	// TODO: Use r.client.Delete here instead of Update.
+	err = r.client.Update(context.TODO(), database)
+	require.NoError(t, err)
+
+	res, err = r.Reconcile(req)
+	require.NoError(t, err)
+	require.Equal(t, false, res.Requeue)
 }

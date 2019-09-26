@@ -2,6 +2,7 @@ module github.com/digitalocean/dodb-operator
 
 require (
 	github.com/digitalocean/godo v1.22.0
+	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.19.0
 	github.com/golang/mock v1.2.0
 	github.com/operator-framework/operator-sdk v0.10.1-0.20190919225052-3a85983ecc72

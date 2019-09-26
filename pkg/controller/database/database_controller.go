@@ -7,6 +7,7 @@ import (
 	doopv1alpha1 "github.com/digitalocean/dodb-operator/pkg/apis/doop/v1alpha1"
 	"github.com/digitalocean/dodb-operator/pkg/do"
 	"github.com/digitalocean/godo"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -21,6 +22,7 @@ import (
 
 const (
 	databaseStatusOnline = "online"
+	databaseFinalizer    = "finalizer.database.doop.do.co"
 )
 
 var (
@@ -113,6 +115,34 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
+	// Check if the instance is marked to be deleted, which is indicated by the deletion timestamp being set.
+	if instance.GetDeletionTimestamp() != nil {
+		if contains(instance.GetFinalizers(), databaseFinalizer) {
+			// Run finalization logic for databaseFinalizer. If the
+			// finalization logic fails, don't remove the finalizer so
+			// that we can retry during the next reconciliation.
+			if err := r.finalizeDatabase(reqLogger, instance); err != nil {
+				return reconcile.Result{}, err
+			}
+
+			// Remove databaseFinalizer.
+			// Once all finalizers have been removed, the object will be deleted.
+			instance.SetFinalizers(remove(instance.GetFinalizers(), databaseFinalizer))
+			err := r.client.Update(context.TODO(), instance)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+		return reconcile.Result{}, nil
+	}
+
+	// Add finalizer for this CR
+	if !contains(instance.GetFinalizers(), databaseFinalizer) {
+		if err := r.addFinalizer(reqLogger, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	databaseID := instance.Status.ID
 
 	if databaseID == "" {
@@ -158,4 +188,45 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileDatabase) finalizeDatabase(reqLogger logr.Logger, instance *doopv1alpha1.Database) error {
+	databaseID := instance.Status.ID
+	_, err := r.doClient.Databases.Delete(context.TODO(), databaseID)
+	if err != nil {
+		return err
+	}
+	reqLogger.Info("Deleted Database", databaseID, "Database.Name", instance.Spec.Name)
+	return nil
+}
+
+func (r *ReconcileDatabase) addFinalizer(reqLogger logr.Logger, m *doopv1alpha1.Database) error {
+	reqLogger.Info("Adding Finalizer for the Database")
+	m.SetFinalizers(append(m.GetFinalizers(), databaseFinalizer))
+
+	// Update CR
+	err := r.client.Update(context.TODO(), m)
+	if err != nil {
+		reqLogger.Error(err, "Failed to update Database with finalizer")
+		return err
+	}
+	return nil
+}
+
+func contains(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+func remove(list []string, s string) []string {
+	for i, v := range list {
+		if v == s {
+			list = append(list[:i], list[i+1:]...)
+		}
+	}
+	return list
 }
