@@ -1,7 +1,9 @@
 module github.com/snormore/dodb-operator
 
 require (
+	github.com/digitalocean/godo v1.22.0
 	github.com/go-openapi/spec v0.19.0
+	github.com/golang/mock v1.2.0
 	github.com/operator-framework/operator-sdk v0.10.1-0.20190919225052-3a85983ecc72
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0

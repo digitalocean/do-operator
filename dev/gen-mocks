@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+if [ ! "$(which mockgen 2> /dev/null)" ]; then
+    go install github.com/golang/mock/mockgen
+fi
+
+mockgen -destination=mocks/mock_godo_databases_service.go -package=mocks github.com/digitalocean/godo DatabasesService
