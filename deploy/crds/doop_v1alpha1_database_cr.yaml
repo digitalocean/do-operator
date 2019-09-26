@@ -3,5 +3,5 @@ kind: Database
 metadata:
   name: example-database
 spec:
-  # Add fields here
-  size: 3
+  name: example
+  engineSlug: redis
