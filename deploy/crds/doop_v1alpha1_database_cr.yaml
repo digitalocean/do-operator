@@ -5,3 +5,10 @@ metadata:
 spec:
   name: example
   engineSlug: redis
+  version: "5"
+  sizeSlug: s-1vcpu-2gb
+  region: sfo2
+  numNodes: 2
+  tags:
+  - test
+  - doop

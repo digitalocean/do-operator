@@ -17,8 +17,8 @@ type DatabaseSpec struct {
 	Version            string   `json:"version,omitempty"`
 	SizeSlug           string   `json:"size,omitempty"`
 	Region             string   `json:"region,omitempty"`
-	NumNodes           int      `json:"num_nodes,omitempty"`
-	PrivateNetworkUUID string   `json:"private_network_uuid"`
+	NumNodes           int      `json:"numNodes,omitempty"`
+	PrivateNetworkUUID string   `json:"privateNetworkUuid"`
 	Tags               []string `json:"tags,omitempty"`
 }
 
@@ -44,16 +44,16 @@ type DatabaseStatus struct {
 	EngineSlug         string                     `json:"engine,omitempty"`
 	VersionSlug        string                     `json:"version,omitempty"`
 	Connection         *DatabaseConnection        `json:"connection,omitempty"`
-	PrivateConnection  *DatabaseConnection        `json:"private_connection,omitempty"`
+	PrivateConnection  *DatabaseConnection        `json:"privateConnection,omitempty"`
 	Users              []DatabaseUser             `json:"users,omitempty"`
-	NumNodes           int                        `json:"num_nodes,omitempty"`
+	NumNodes           int                        `json:"numNodes,omitempty"`
 	SizeSlug           string                     `json:"size,omitempty"`
-	DBNames            []string                   `json:"db_names,omitempty"`
+	DBNames            []string                   `json:"dbNames,omitempty"`
 	RegionSlug         string                     `json:"region,omitempty"`
 	Status             string                     `json:"status,omitempty"`
-	MaintenanceWindow  *DatabaseMaintenanceWindow `json:"maintenance_window,omitempty"`
-	CreatedAt          *metav1.Time               `json:"created_at,omitempty"`
-	PrivateNetworkUUID string                     `json:"private_network_uuid,omitempty"`
+	MaintenanceWindow  *DatabaseMaintenanceWindow `json:"maintenanceWindow,omitempty"`
+	CreatedAt          *metav1.Time               `json:"createdAt,omitempty"`
+	PrivateNetworkUUID string                     `json:"privateNetworkUuid,omitempty"`
 	Tags               []string                   `json:"tags,omitempty"`
 }
 
