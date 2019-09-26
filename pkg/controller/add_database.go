@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/snormore/dodb-operator/pkg/controller/database"
+	"github.com/digitalocean/dodb-operator/pkg/controller/database"
 )
 
 func init() {

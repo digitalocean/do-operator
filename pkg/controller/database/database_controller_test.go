@@ -3,7 +3,7 @@ package database
 import (
 	"testing"
 
-	doopv1alpha1 "github.com/snormore/dodb-operator/pkg/apis/doop/v1alpha1"
+	doopv1alpha1 "github.com/digitalocean/dodb-operator/pkg/apis/doop/v1alpha1"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

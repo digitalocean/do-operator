@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/digitalocean/godo"
-	doopv1alpha1 "github.com/snormore/dodb-operator/pkg/apis/doop/v1alpha1"
-	"github.com/snormore/dodb-operator/pkg/do"
+	doopv1alpha1 "github.com/digitalocean/dodb-operator/pkg/apis/doop/v1alpha1"
+	"github.com/digitalocean/dodb-operator/pkg/do"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"

@@ -1,4 +1,4 @@
-module github.com/snormore/dodb-operator
+module github.com/digitalocean/dodb-operator
 
 require (
 	github.com/digitalocean/godo v1.22.0
