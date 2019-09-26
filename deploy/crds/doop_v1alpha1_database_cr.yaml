@@ -6,7 +6,7 @@ spec:
   name: example
   engine: redis
   version: "5"
-  size: s-1vcpu-2gb
+  size: db-s-2vcpu-4gb
   region: sfo2
   num_nodes: 2
   tags:
