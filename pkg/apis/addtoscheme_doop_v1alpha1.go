@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/digitalocean/dodb-operator/pkg/apis/doop/v1alpha1"
+	"github.com/digitalocean/do-operator/pkg/apis/doop/v1alpha1"
 )
 
 func init() {

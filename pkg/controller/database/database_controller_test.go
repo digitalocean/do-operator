@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/digitalocean/dodb-operator/mocks"
-	doopv1alpha1 "github.com/digitalocean/dodb-operator/pkg/apis/doop/v1alpha1"
+	"github.com/digitalocean/do-operator/mocks"
+	doopv1alpha1 "github.com/digitalocean/do-operator/pkg/apis/doop/v1alpha1"
 	"github.com/digitalocean/godo"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"

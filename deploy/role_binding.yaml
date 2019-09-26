@@ -1,11 +1,11 @@
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: dodb-operator
+  name: do-operator
 subjects:
 - kind: ServiceAccount
-  name: dodb-operator
+  name: do-operator
 roleRef:
   kind: Role
-  name: dodb-operator
+  name: do-operator
   apiGroup: rbac.authorization.k8s.io

@@ -1,11 +1,11 @@
 FROM registry.access.redhat.com/ubi7/ubi-minimal:latest
 
-ENV OPERATOR=/usr/local/bin/dodb-operator \
+ENV OPERATOR=/usr/local/bin/do-operator \
     USER_UID=1001 \
-    USER_NAME=dodb-operator
+    USER_NAME=do-operator
 
 # install operator binary
-COPY build/_output/bin/dodb-operator ${OPERATOR}
+COPY build/_output/bin/do-operator ${OPERATOR}
 
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup

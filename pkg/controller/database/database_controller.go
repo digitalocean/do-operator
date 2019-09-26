@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	doopv1alpha1 "github.com/digitalocean/dodb-operator/pkg/apis/doop/v1alpha1"
-	"github.com/digitalocean/dodb-operator/pkg/do"
+	doopv1alpha1 "github.com/digitalocean/do-operator/pkg/apis/doop/v1alpha1"
+	"github.com/digitalocean/do-operator/pkg/do"
 	"github.com/digitalocean/godo"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"

@@ -1,4 +1,4 @@
-module github.com/digitalocean/dodb-operator
+module github.com/digitalocean/do-operator
 
 require (
 	github.com/digitalocean/godo v1.22.0
