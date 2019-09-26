@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/digitalocean/godo"
 	doopv1alpha1 "github.com/digitalocean/dodb-operator/pkg/apis/doop/v1alpha1"
 	"github.com/digitalocean/dodb-operator/pkg/do"
+	"github.com/digitalocean/godo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -122,6 +122,14 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 		// Update the DO database instance.
 		panic("not implemented")
 	}
+
+	// Populate the instance status with DO object.
+	instance.Status.FromDO(database)
+	err = r.client.Status().Update(context.Background(), instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	reqLogger.Info("Updated Database status", "Database.Name", database.Name, "Database.ID", database.ID)
 
 	return reconcile.Result{}, nil
 }

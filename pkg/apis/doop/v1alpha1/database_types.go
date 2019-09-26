@@ -57,6 +57,41 @@ type DatabaseStatus struct {
 	Tags               []string                   `json:"tags,omitempty"`
 }
 
+func (s *DatabaseStatus) FromDO(d *godo.Database) {
+	connection := DatabaseConnection{}
+	connection.FromDO(d.Connection)
+
+	privateConnection := DatabaseConnection{}
+	privateConnection.FromDO(d.PrivateConnection)
+
+	users := []DatabaseUser{}
+	for _, doUser := range d.Users {
+		var user DatabaseUser
+		user.FromDO(doUser)
+		users = append(users, user)
+	}
+
+	maintenanceWindow := &DatabaseMaintenanceWindow{}
+	maintenanceWindow.FromDO(d.MaintenanceWindow)
+
+	s.ID = d.ID
+	s.Name = d.Name
+	s.EngineSlug = d.EngineSlug
+	s.VersionSlug = d.VersionSlug
+	s.Connection = &connection
+	s.PrivateConnection = &privateConnection
+	s.Users = users
+	s.NumNodes = d.NumNodes
+	s.SizeSlug = d.SizeSlug
+	s.DBNames = d.DBNames
+	s.RegionSlug = d.RegionSlug
+	s.Status = d.Status
+	s.MaintenanceWindow = maintenanceWindow
+	s.CreatedAt = &metav1.Time{Time: d.CreatedAt}
+	s.PrivateNetworkUUID = d.PrivateNetworkUUID
+	s.Tags = d.Tags
+}
+
 // DatabaseConnection represents a database connection
 // +k8s:openapi-gen=true
 // https://github.com/digitalocean/godo/blob/master/databases.go#L92
@@ -70,6 +105,16 @@ type DatabaseConnection struct {
 	SSL      bool   `json:"ssl,omitempty"`
 }
 
+func (c *DatabaseConnection) FromDO(d *godo.DatabaseConnection) {
+	c.URI = d.URI
+	c.Database = d.Database
+	c.Host = d.Host
+	c.Port = d.Port
+	c.User = d.User
+	c.Password = d.Password
+	c.SSL = d.SSL
+}
+
 // DatabaseUser represents a user in the database
 // +k8s:openapi-gen=true
 // https://github.com/digitalocean/godo/blob/master/databases.go#L103
@@ -77,6 +122,20 @@ type DatabaseUser struct {
 	Name     string `json:"name,omitempty"`
 	Role     string `json:"role,omitempty"`
 	Password string `json:"password,omitempty"`
+}
+
+func (dbu *DatabaseUser) FromDO(doDbUser godo.DatabaseUser) {
+	dbu.Name = doDbUser.Name
+	dbu.Role = doDbUser.Role
+	dbu.Password = doDbUser.Password
+}
+
+func (dbu *DatabaseUser) ToDO() godo.DatabaseUser {
+	return godo.DatabaseUser{
+		Name:     dbu.Name,
+		Role:     dbu.Role,
+		Password: dbu.Password,
+	}
 }
 
 // DatabaseMaintenanceWindow represents the maintenance_window of a database
@@ -88,6 +147,13 @@ type DatabaseMaintenanceWindow struct {
 	Hour        string   `json:"hour,omitempty"`
 	Pending     bool     `json:"pending,omitempty"`
 	Description []string `json:"description,omitempty"`
+}
+
+func (w *DatabaseMaintenanceWindow) FromDO(d *godo.DatabaseMaintenanceWindow) {
+	w.Day = d.Day
+	w.Hour = d.Hour
+	w.Pending = d.Pending
+	w.Description = d.Description
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
