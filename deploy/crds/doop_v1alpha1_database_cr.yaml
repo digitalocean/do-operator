@@ -1,0 +1,7 @@
+apiVersion: doop.do.co/v1alpha1
+kind: Database
+metadata:
+  name: example-database
+spec:
+  # Add fields here
+  size: 3
