@@ -73,8 +73,8 @@ func (s *DatabaseStatus) FromDO(d *godo.Database) {
 
 	var maintenanceWindow *DatabaseMaintenanceWindow
 	if d.MaintenanceWindow != nil {
-		maintenanceWindow = make(DatabaseMaintenanceWindow)
-		maintenanceWindow.FromDO(d.MaintenmaintenanceWindow)
+		maintenanceWindow = new(DatabaseMaintenanceWindow)
+		maintenanceWindow.FromDO(d.MaintenanceWindow)
 	}
 
 	s.ID = d.ID
