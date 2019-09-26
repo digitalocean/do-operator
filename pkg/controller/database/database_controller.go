@@ -19,6 +19,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+const (
+	databaseStatusOnline = "online"
+)
+
 var (
 	log = logf.Log.WithName("controller_database")
 
@@ -110,17 +114,33 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 	}
 
 	databaseID := instance.Status.ID
-	var database *godo.Database
+
 	if databaseID == "" {
 		// Create the DO database instance.
-		database, _, err = r.doClient.Databases.Create(context.Background(), instance.Spec.ToDO())
+		database, _, err := r.doClient.Databases.Create(context.Background(), instance.Spec.ToDO())
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 		reqLogger.Info("Created Database", "Database.Name", database.Name, "Database.ID", database.ID)
-	} else {
-		// Update the DO database instance.
-		panic("not implemented")
+
+		// Populate the instance status with DO object.
+		instance.Status.FromDO(database)
+		err = r.client.Status().Update(context.Background(), instance)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		reqLogger.Info("Updated Database status", "Database.Name", database.Name, "Database.ID", database.ID)
+
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	database, _, err := r.doClient.Databases.Get(context.Background(), databaseID)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			reqLogger.Info("Unknown Database", "Database.Name", database.Name, "Database.ID", database.ID)
+			return reconcile.Result{}, nil
+		}
+		return reconcile.Result{}, err
 	}
 
 	// Populate the instance status with DO object.
@@ -130,6 +150,12 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 	reqLogger.Info("Updated Database status", "Database.Name", database.Name, "Database.ID", database.ID)
+
+	// If status is not yet online, then requeue and check again on next reconcile.
+	if database.Status != databaseStatusOnline {
+		reqLogger.Info("Waiting for Database to be online", "Database.Name", database.Name, "Database.ID", database.ID, "Database.Status", database.Status)
+		return reconcile.Result{Requeue: true}, nil
+	}
 
 	return reconcile.Result{}, nil
 }

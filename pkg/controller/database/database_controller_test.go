@@ -69,7 +69,7 @@ func TestDatabaseControllerCreate(t *testing.T) {
 
 	res, err := r.Reconcile(req)
 	require.NoError(t, err)
-	require.Equal(t, false, res.Requeue)
+	require.Equal(t, true, res.Requeue)
 
 	database := &doopv1alpha1.Database{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, database)
@@ -81,5 +81,25 @@ func TestDatabaseControllerCreate(t *testing.T) {
 		PrivateConnection: &doopv1alpha1.DatabaseConnection{},
 		MaintenanceWindow: &doopv1alpha1.DatabaseMaintenanceWindow{},
 		Status:            "creating",
+	}, database.Status)
+
+	// Check reconcile after status is online.
+	fakeDatabase.Status = databaseStatusOnline
+	mockDatabasesService.EXPECT().Get(gomock.Any(), fakeDatabase.ID).Return(fakeDatabase, nil, nil).Times(1)
+
+	res, err = r.Reconcile(req)
+	require.NoError(t, err)
+	require.Equal(t, false, res.Requeue)
+
+	database = &doopv1alpha1.Database{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, database)
+	require.NoError(t, err)
+	require.Equal(t, doopv1alpha1.DatabaseStatus{
+		ID:                "1",
+		Name:              "foo",
+		Connection:        &doopv1alpha1.DatabaseConnection{},
+		PrivateConnection: &doopv1alpha1.DatabaseConnection{},
+		MaintenanceWindow: &doopv1alpha1.DatabaseMaintenanceWindow{},
+		Status:            databaseStatusOnline,
 	}, database.Status)
 }
