@@ -30,3 +30,8 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "do-operator"
+            - name: DIGITALOCEAN_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: do-operator
+                  key: DIGITALOCEAN_ACCESS_TOKEN
