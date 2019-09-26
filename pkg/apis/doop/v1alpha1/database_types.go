@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/digitalocean/godo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -19,6 +20,19 @@ type DatabaseSpec struct {
 	NumNodes           int      `json:"num_nodes,omitempty"`
 	PrivateNetworkUUID string   `json:"private_network_uuid"`
 	Tags               []string `json:"tags,omitempty"`
+}
+
+func (s *DatabaseSpec) ToDO() *godo.DatabaseCreateRequest {
+	return &godo.DatabaseCreateRequest{
+		Name:               s.Name,
+		EngineSlug:         s.EngineSlug,
+		Version:            s.Version,
+		SizeSlug:           s.SizeSlug,
+		Region:             s.Region,
+		NumNodes:           s.NumNodes,
+		PrivateNetworkUUID: s.PrivateNetworkUUID,
+		Tags:               s.Tags,
+	}
 }
 
 // DatabaseStatus defines the observed state of Database

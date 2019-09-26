@@ -7,6 +7,7 @@ require (
 	github.com/operator-framework/operator-sdk v0.10.1-0.20190919225052-3a85983ecc72
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0
+	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	k8s.io/api v0.0.0-20190612125737-db0771252981
 	k8s.io/apimachinery v0.0.0-20190612125636-6a5db36e93ad
 	k8s.io/client-go v11.0.0+incompatible
