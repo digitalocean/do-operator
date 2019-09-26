@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+
+if [ ! "${DIGITALOCEAN_ACCESS_TOKEN:-}" ]; then
+    echo "DIGITALOCEAN_ACCESS_TOKEN required"
+    exit 1
+fi
+
+if [ ! "${KUBECONFIG:-}" ]; then
+    echo "KUBECONFIG required"
+    exit 1
+fi
+
+operator-sdk generate k8s
+operator-sdk build snormore/do-operator
+docker push snormore/do-operator:latest
+
+kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}" || true
+
+kubectl apply -f deploy/crds/do_v1alpha1_database_crd.yaml
+kubectl apply -f deploy/
+kubectl apply -f deploy/crds/do_v1alpha1_database_cr.yaml
+
+sleep 1
+
+kubectl get pods -A

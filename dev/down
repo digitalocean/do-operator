@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+kubectl delete -f deploy/crds/do_v1alpha1_database_cr.yaml || true
+kubectl delete -f deploy/ || true
+kubectl delete -f deploy/crds/do_v1alpha1_database_crd.yaml || true
