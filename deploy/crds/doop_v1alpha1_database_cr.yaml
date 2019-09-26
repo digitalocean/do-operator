@@ -1,7 +1,7 @@
 apiVersion: doop.do.co/v1alpha1
 kind: Database
 metadata:
-  name: example-database
+  name: example
 spec:
   name: example
   engineSlug: redis
