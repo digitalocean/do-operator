@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dodb-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: dodb-operator
+  template:
+    metadata:
+      labels:
+        name: dodb-operator
+    spec:
+      serviceAccountName: dodb-operator
+      containers:
+        - name: dodb-operator
+          # Replace this with the built image name
+          image: REPLACE_IMAGE
+          command:
+          - dodb-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "dodb-operator"
