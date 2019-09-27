@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -106,9 +107,13 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+	databaseID := instance.Status.ID
 
 	// Check if the instance is marked to be deleted, which is indicated by the deletion timestamp being set.
 	if instance.GetDeletionTimestamp() != nil {
+		if databaseID == "" {
+			return reconcile.Result{}, nil
+		}
 		if contains(instance.GetFinalizers(), databaseFinalizer) {
 			// Run finalization logic for databaseFinalizer. If the
 			// finalization logic fails, don't remove the finalizer so
@@ -134,8 +139,6 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 			return reconcile.Result{}, err
 		}
 	}
-
-	databaseID := instance.Status.ID
 
 	if databaseID == "" {
 		// Create the DO database instance.
@@ -168,9 +171,9 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	database, _, err := r.doClient.Databases.Get(context.Background(), databaseID)
+	database, resp, err := r.doClient.Databases.Get(context.Background(), databaseID)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if resp.StatusCode == http.StatusNotFound {
 			reqLogger.Info("Unknown Database", "Database.Name", database.Name, "Database.ID", database.ID)
 			return reconcile.Result{}, nil
 		}
