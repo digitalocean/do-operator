@@ -1,4 +1,4 @@
-A Kubernetes [operator](https://github.com/operator-framework/operator-sdk) for provisioning and managing DO database instances.
+A Kubernetes [operator](https://github.com/operator-framework/operator-sdk) for provisioning and managing [DigitalOcean Databases](https://www.digitalocean.com/products/managed-databases/).
 
 [![CircleCI](https://circleci.com/gh/digitalocean/do-operator.svg?style=svg)](https://circleci.com/gh/digitalocean/do-operator)
 
