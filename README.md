@@ -38,3 +38,31 @@ kubectl describe database example
 ```
 
 A couple secrets will be created for each `Database` instance; `example-connection` and `example-private-connection`.
+
+Use them in your workload:
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: hello
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: hello
+        image: snormore/hello
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        env:
+          - name: DATABASE_URI
+            valueFrom:
+              secretKeyRef:
+                name: example-connection
+                key: uri
+```
