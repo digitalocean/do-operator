@@ -1,0 +1,21 @@
+linters:
+  enable-all: false
+  enable:
+    - deadcode
+    - errcheck
+    - goconst
+    - gofmt
+    - golint
+    - gosec
+    - govet
+    - ineffassign
+    - interfacer
+    - lll
+    - misspell
+    - nakedret
+    - structcheck
+    - unconvert
+    - varcheck
+  disable:
+    - staticcheck
+    - megacheck
