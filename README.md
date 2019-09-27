@@ -49,16 +49,10 @@ metadata:
 spec:
   replicas: 2
   template:
-    metadata:
-      labels:
-        app: hello
     spec:
       containers:
       - name: hello
         image: snormore/hello
-        ports:
-        - containerPort: 80
-          protocol: TCP
         env:
           - name: DATABASE_URI
             valueFrom:
