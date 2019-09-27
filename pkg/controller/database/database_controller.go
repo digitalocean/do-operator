@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -11,9 +12,11 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -62,16 +65,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to primary resource Database
 	err = c.Watch(&source.Kind{Type: &doopv1alpha1.Database{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner Database
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &doopv1alpha1.Database{},
-	})
 	if err != nil {
 		return err
 	}
@@ -160,6 +153,18 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 		}
 		reqLogger.Info("Updated Database status", "Database.Name", database.Name, "Database.ID", database.ID)
 
+		// Create a secret for the database connection.
+		_, err = r.createConnectionSecret(reqLogger, instance, database, "-connection")
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// Create a secret for the database private connection.
+		_, err = r.createConnectionSecret(reqLogger, instance, database, "-private-connection")
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
 		return reconcile.Result{Requeue: true}, nil
 	}
 
@@ -190,6 +195,30 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileDatabase) createConnectionSecret(reqLogger logr.Logger, instance *doopv1alpha1.Database, database *godo.Database, secretNameSuffix string) (*corev1.Secret, error) {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s%s", instance.Name, secretNameSuffix),
+			Namespace: instance.Namespace,
+			Labels: map[string]string{
+				"app": instance.Name,
+			},
+		},
+		StringData: doopv1alpha1.DatabaseConnectionToSringData(database.Connection),
+	}
+	err := r.client.Create(context.Background(), secret)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set Database instance as the owner and controller
+	if err := controllerutil.SetControllerReference(instance, secret, r.scheme); err != nil {
+		return nil, err
+	}
+
+	return secret, nil
 }
 
 func (r *ReconcileDatabase) finalizeDatabase(reqLogger logr.Logger, instance *doopv1alpha1.Database) error {
