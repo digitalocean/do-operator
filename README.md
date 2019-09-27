@@ -4,17 +4,17 @@ A Kubernetes [operator](https://github.com/operator-framework/operator-sdk) for 
 
 ## Usage
 
-First create a `Secret` containing your DigitalOcean API token:
+Create a `Secret` containing your DigitalOcean API token:
 ```sh
 kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}"
 ```
 
-Install the latest release into your cluster with:
-```
+Install the latest release into your cluster.
+```sh
 kubectl apply -f https://raw.githubusercontent.com/digitalocean/do-operator/master/releases/v0.0.2/manifest.yaml
 ```
 
-Create a `Database` object:
+Create a `Database` object and wait + watch as the operator creates and monitors the status of a DO database.
 ```yaml
 apiVersion: doop.do.co/v1alpha1
 kind: Database
