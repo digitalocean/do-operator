@@ -17,10 +17,5 @@ docker push snormore/do-operator:latest
 
 kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}" || true
 
-kubectl apply -f deploy/crds/doop_v1alpha1_database_crd.yaml
+kubectl apply -f deploy/crds/
 kubectl apply -f deploy/
-kubectl apply -f deploy/crds/doop_v1alpha1_database_cr.yaml
-
-sleep 1
-
-kubectl get pods -A
