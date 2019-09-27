@@ -14,7 +14,7 @@ Install the latest release into your cluster.
 kubectl apply -f https://raw.githubusercontent.com/digitalocean/do-operator/master/releases/v0.0.2/manifest.yaml
 ```
 
-Create a `Database` object and wait + watch as the operator creates and monitors the status of a DO database.
+Create a `Database` object and wait + watch as the operator creates and monitors the status of a DO database with the given configuration.
 ```yaml
 apiVersion: doop.do.co/v1alpha1
 kind: Database
