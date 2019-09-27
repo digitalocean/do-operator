@@ -4,11 +4,15 @@ A Kubernetes [operator](https://github.com/operator-framework/operator-sdk) for 
 
 ## Usage
 
+First create a `Secret` containing your DigitalOcean API token:
+```sh
+kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}"
+```
+
 If you want to install the latest development version:
 ```sh
 git clone git@github.com:snormore/do-operator.git
 cd do-operator
-kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}"
 kubectl apply -f releases/dev/manifest.yaml
 ```
 
