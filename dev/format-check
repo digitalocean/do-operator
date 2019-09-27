@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
-if gofmt -w .; then
+DIFF="$(gofmt -d .)"
+echo "${DIFF}"
+if [ "${DIFF}" ]; then
     exit 1
 fi
