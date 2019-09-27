@@ -4,11 +4,17 @@ A Kubernetes [operator](https://github.com/operator-framework/operator-sdk) for 
 
 ## Usage
 
+If you want to install the latest development version:
 ```sh
 git clone git@github.com:snormore/do-operator.git
 cd do-operator
 kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}"
 kubectl apply -f releases/dev/manifest.yaml
+```
+
+Otherwise you can just install the latest release with:
+```
+kubectl apply -f https://raw.githubusercontent.com/digitalocean/do-operator/master/releases/v0.0.2/manifest.yaml
 ```
 
 Create a `Database` object:
