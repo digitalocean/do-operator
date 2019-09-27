@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e
+
+. dev/env
+
+REPO="${REGISTRY}/${NAME}:${VERSION}"
+
+operator-sdk generate k8s
+operator-sdk build ${REPO}
+
+# Build manifest for this version.
+mkdir -p ${RELEASE_DIR}
+DEPLOY_DIR="deploy"
+rm -f ${RELEASE_MANIFEST_PATH}
+touch ${RELEASE_MANIFEST_PATH}
+for file in $(find ${DEPLOY_DIR} -name '*.yaml'); do
+    echo '---' >> ${RELEASE_MANIFEST_PATH}
+    cat ${file} >> ${RELEASE_MANIFEST_PATH}
+done
+sed -i.bak "s%REPLACE_IMAGE%${REPO}%g" ${RELEASE_MANIFEST_PATH}
+rm ${RELEASE_MANIFEST_PATH}.bak
+echo "${RELEASE_MANIFEST_PATH} saved"

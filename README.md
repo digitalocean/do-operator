@@ -7,8 +7,8 @@ A Kubernetes [operator](https://github.com/operator-framework/operator-sdk) for 
 ```sh
 git clone git@github.com:snormore/do-operator.git
 cd do-operator
-kubectl apply -f deploy/crds
-kubectl apply -f deploy
+kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}"
+kubectl apply -f releases/dev/manifest.yaml
 ```
 
 Create a `Database` object:

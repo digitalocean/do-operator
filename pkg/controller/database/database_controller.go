@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"os"
+	"time"
 
 	doopv1alpha1 "github.com/digitalocean/do-operator/pkg/apis/doop/v1alpha1"
 	"github.com/digitalocean/do-operator/pkg/do"
@@ -184,7 +185,10 @@ func (r *ReconcileDatabase) Reconcile(request reconcile.Request) (reconcile.Resu
 	// If status is not yet online, then requeue and check again on next reconcile.
 	if database.Status != databaseStatusOnline {
 		reqLogger.Info("Waiting for Database to be online", "Database.Name", database.Name, "Database.ID", database.ID, "Database.Status", database.Status)
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{
+			Requeue:      true,
+			RequeueAfter: 30 * time.Second,
+		}, nil
 	}
 
 	return reconcile.Result{}, nil

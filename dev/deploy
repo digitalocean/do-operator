@@ -1,0 +1,18 @@
+#!/bin/bash
+set -e
+
+. dev/env
+
+if [ ! "${DIGITALOCEAN_ACCESS_TOKEN:-}" ]; then
+    echo "DIGITALOCEAN_ACCESS_TOKEN required"
+    exit 1
+fi
+
+if [ ! "${KUBECONFIG:-}" ]; then
+    echo "KUBECONFIG required"
+    exit 1
+fi
+
+kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}" || true
+
+kubectl apply -f ${RELEASE_MANIFEST_PATH}

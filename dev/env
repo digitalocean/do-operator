@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+NAME=${NAME:-do-operator}
+REGISTRY="${REGISTRY:-snormore}"
+VERSION="${VERSION:-dev}"
+RELEASE_DIR="releases/${VERSION}"
+RELEASE_MANIFEST_PATH="${RELEASE_DIR}/manifest.yaml"

@@ -10,7 +10,13 @@ jobs:
             - go-mod-{{ checksum "go.sum" }}
       - run:
           name: Run tests
-          command: go test ./... -v
+          command: dev/test
+      - run:
+          name: Run lint checks
+          command: dev/lint
+      - run:
+          name: Run format checks
+          command: dev/format-check
       - save_cache:
           key: go-mod-{{ checksum "go.sum" }}
           paths:
