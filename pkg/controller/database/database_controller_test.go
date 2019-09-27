@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -160,6 +161,82 @@ func TestDatabaseControllerCreateDelete(t *testing.T) {
 
 	database.DeletionTimestamp = &metav1.Time{Time: time.Now()}
 	// TODO: Use r.client.Delete here instead of Update.
+	err = r.client.Update(context.TODO(), database)
+	require.NoError(t, err)
+
+	res, err = r.Reconcile(req)
+	require.NoError(t, err)
+	require.Equal(t, false, res.Requeue)
+}
+
+func TestDatabaseControllerUnauthorizedCreateDelete(t *testing.T) {
+	// Register operator types with the runtime scheme.
+	s := scheme.Scheme
+	s.AddKnownTypes(doopv1alpha1.SchemeGroupVersion, &doopv1alpha1.Database{})
+
+	example := &doopv1alpha1.Database{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "example",
+			Namespace: "doop",
+			Labels: map[string]string{
+				"foo": "bar",
+			},
+		},
+	}
+
+	objs := []runtime.Object{example}
+	cl := fake.NewFakeClient(objs...)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockDatabasesService := mocks.NewMockDatabasesService(mockCtrl)
+
+	unauthorizedResponse := &godo.Response{
+		Response: &http.Response{
+			StatusCode: http.StatusUnauthorized,
+		},
+	}
+	unauthorizedError := fmt.Errorf("unauthorized")
+	mockDatabasesService.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, unauthorizedResponse, unauthorizedError).Times(1)
+
+	r := &ReconcileDatabase{
+		client: cl,
+		scheme: s,
+		doClient: &godo.Client{
+			Databases: mockDatabasesService,
+		},
+	}
+
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      example.Name,
+			Namespace: example.Namespace,
+		},
+	}
+
+	res, err := r.Reconcile(req)
+	require.EqualError(t, err, unauthorizedError.Error())
+	require.Equal(t, false, res.Requeue)
+
+	database := &doopv1alpha1.Database{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, database)
+	require.NoError(t, err)
+	require.Equal(t, doopv1alpha1.DatabaseStatus{}, database.Status)
+
+	// Check reconcile after status is online.
+	mockDatabasesService.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, unauthorizedResponse, unauthorizedError).Times(1)
+
+	res, err = r.Reconcile(req)
+	require.EqualError(t, err, unauthorizedError.Error())
+	require.Equal(t, false, res.Requeue)
+
+	database = &doopv1alpha1.Database{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, database)
+	require.NoError(t, err)
+	require.Equal(t, doopv1alpha1.DatabaseStatus{}, database.Status)
+
+	// Delete the object and ensure there is no request to DO because there is no resource ID.
+	database.DeletionTimestamp = &metav1.Time{Time: time.Now()}
 	err = r.client.Update(context.TODO(), database)
 	require.NoError(t, err)
 
