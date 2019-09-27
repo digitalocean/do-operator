@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"strconv"
+
 	"github.com/digitalocean/godo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -22,6 +24,7 @@ type DatabaseSpec struct {
 	Tags               []string `json:"tags,omitempty"`
 }
 
+// ToDO converts a Kubernetes object to DO object.
 func (s *DatabaseSpec) ToDO() *godo.DatabaseCreateRequest {
 	return &godo.DatabaseCreateRequest{
 		Name:               s.Name,
@@ -43,8 +46,6 @@ type DatabaseStatus struct {
 	Name               string                     `json:"name,omitempty"`
 	EngineSlug         string                     `json:"engine,omitempty"`
 	VersionSlug        string                     `json:"version,omitempty"`
-	Connection         *DatabaseConnection        `json:"connection,omitempty"`
-	PrivateConnection  *DatabaseConnection        `json:"private_connection,omitempty"`
 	Users              []DatabaseUser             `json:"users,omitempty"`
 	NumNodes           int                        `json:"num_nodes,omitempty"`
 	SizeSlug           string                     `json:"size,omitempty"`
@@ -59,12 +60,6 @@ type DatabaseStatus struct {
 
 // FromDO converts the Kubernetes object to a DO object.
 func (s *DatabaseStatus) FromDO(d *godo.Database) {
-	connection := DatabaseConnection{}
-	connection.FromDO(d.Connection)
-
-	privateConnection := DatabaseConnection{}
-	privateConnection.FromDO(d.PrivateConnection)
-
 	users := []DatabaseUser{}
 	for _, doUser := range d.Users {
 		var user DatabaseUser
@@ -82,8 +77,6 @@ func (s *DatabaseStatus) FromDO(d *godo.Database) {
 	s.Name = d.Name
 	s.EngineSlug = d.EngineSlug
 	s.VersionSlug = d.VersionSlug
-	s.Connection = &connection
-	s.PrivateConnection = &privateConnection
 	s.Users = users
 	s.NumNodes = d.NumNodes
 	s.SizeSlug = d.SizeSlug
@@ -94,30 +87,6 @@ func (s *DatabaseStatus) FromDO(d *godo.Database) {
 	s.CreatedAt = &metav1.Time{Time: d.CreatedAt}
 	s.PrivateNetworkUUID = d.PrivateNetworkUUID
 	s.Tags = d.Tags
-}
-
-// DatabaseConnection represents a database connection
-// +k8s:openapi-gen=true
-// https://github.com/digitalocean/godo/blob/master/databases.go#L92
-type DatabaseConnection struct {
-	URI      string `json:"uri,omitempty"`
-	Database string `json:"database,omitempty"`
-	Host     string `json:"host,omitempty"`
-	Port     int    `json:"port,omitempty"`
-	User     string `json:"user,omitempty"`
-	Password string `json:"password,omitempty"`
-	SSL      bool   `json:"ssl,omitempty"`
-}
-
-// FromDO converts the Kubernetes object to a DO object.
-func (c *DatabaseConnection) FromDO(d *godo.DatabaseConnection) {
-	c.URI = d.URI
-	c.Database = d.Database
-	c.Host = d.Host
-	c.Port = d.Port
-	c.User = d.User
-	c.Password = d.Password
-	c.SSL = d.SSL
 }
 
 // DatabaseUser represents a user in the database
@@ -153,6 +122,20 @@ func (w *DatabaseMaintenanceWindow) FromDO(d *godo.DatabaseMaintenanceWindow) {
 	w.Hour = d.Hour
 	w.Pending = d.Pending
 	w.Description = d.Description
+}
+
+// DatabaseConnectionToSringData converts a godo.DatabaseConnection to a
+// map[string]string for secret contents.
+func DatabaseConnectionToSringData(connection *godo.DatabaseConnection) map[string]string {
+	return map[string]string{
+		"uri":      connection.URI,
+		"database": connection.Database,
+		"host":     connection.Host,
+		"port":     strconv.FormatInt(int64(connection.Port), 10),
+		"user":     connection.User,
+		"password": connection.Password,
+		"ssl":      strconv.FormatBool(connection.SSL),
+	}
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

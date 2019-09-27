@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/digitalocean/godo"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -77,11 +79,63 @@ func TestDatabaseControllerCreateDelete(t *testing.T) {
 	require.Equal(t, doopv1alpha1.DatabaseStatus{
 		ID:                "1",
 		Name:              "foo",
-		Connection:        &doopv1alpha1.DatabaseConnection{},
-		PrivateConnection: &doopv1alpha1.DatabaseConnection{},
 		MaintenanceWindow: &doopv1alpha1.DatabaseMaintenanceWindow{},
 		Status:            "creating",
 	}, database.Status)
+
+	// Check that the connection secret was created.
+	connectionSecretNamespace := types.NamespacedName{
+		Namespace: example.Namespace,
+		Name:      fmt.Sprintf("%s-connection", example.Name),
+	}
+	secret := &corev1.Secret{}
+	err = r.client.Get(context.TODO(), connectionSecretNamespace, secret)
+	require.NoError(t, err)
+	require.Equal(t, &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      connectionSecretNamespace.Name,
+			Namespace: connectionSecretNamespace.Namespace,
+			Labels: map[string]string{
+				"app": example.Name,
+			},
+		},
+		StringData: map[string]string{
+			"uri":      "",
+			"database": "",
+			"host":     "",
+			"port":     "0",
+			"user":     "",
+			"password": "",
+			"ssl":      "false",
+		},
+	}, secret)
+
+	// Check that the private connection secret was created.
+	privateConnectionSecretNamespace := types.NamespacedName{
+		Namespace: example.Namespace,
+		Name:      fmt.Sprintf("%s-private-connection", example.Name),
+	}
+	secret = &corev1.Secret{}
+	err = r.client.Get(context.TODO(), privateConnectionSecretNamespace, secret)
+	require.NoError(t, err)
+	require.Equal(t, &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      privateConnectionSecretNamespace.Name,
+			Namespace: privateConnectionSecretNamespace.Namespace,
+			Labels: map[string]string{
+				"app": example.Name,
+			},
+		},
+		StringData: map[string]string{
+			"uri":      "",
+			"database": "",
+			"host":     "",
+			"port":     "0",
+			"user":     "",
+			"password": "",
+			"ssl":      "false",
+		},
+	}, secret)
 
 	// Check reconcile after status is online.
 	fakeDatabase.Status = databaseStatusOnline
@@ -97,8 +151,6 @@ func TestDatabaseControllerCreateDelete(t *testing.T) {
 	require.Equal(t, doopv1alpha1.DatabaseStatus{
 		ID:                "1",
 		Name:              "foo",
-		Connection:        &doopv1alpha1.DatabaseConnection{},
-		PrivateConnection: &doopv1alpha1.DatabaseConnection{},
 		MaintenanceWindow: &doopv1alpha1.DatabaseMaintenanceWindow{},
 		Status:            databaseStatusOnline,
 	}, database.Status)

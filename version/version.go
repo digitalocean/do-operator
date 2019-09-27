@@ -1,5 +1,6 @@
 package version
 
 var (
-	Version = "0.0.1"
+	// Version represents the semver of this package.
+	Version = "0.0.2"
 )
