@@ -9,7 +9,7 @@ Create a `Secret` containing your DigitalOcean API token:
 kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}"
 ```
 
-Install the latest release into your cluster.
+Install the latest release of `do-operator` into your cluster.
 ```sh
 kubectl apply -f https://raw.githubusercontent.com/digitalocean/do-operator/master/releases/v0.0.2/manifest.yaml
 ```
