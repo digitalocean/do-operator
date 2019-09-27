@@ -57,6 +57,7 @@ type DatabaseStatus struct {
 	Tags               []string                   `json:"tags,omitempty"`
 }
 
+// FromDO converts the Kubernetes object to a DO object.
 func (s *DatabaseStatus) FromDO(d *godo.Database) {
 	connection := DatabaseConnection{}
 	connection.FromDO(d.Connection)
@@ -108,6 +109,7 @@ type DatabaseConnection struct {
 	SSL      bool   `json:"ssl,omitempty"`
 }
 
+// FromDO converts the Kubernetes object to a DO object.
 func (c *DatabaseConnection) FromDO(d *godo.DatabaseConnection) {
 	c.URI = d.URI
 	c.Database = d.Database
@@ -127,18 +129,11 @@ type DatabaseUser struct {
 	Password string `json:"password,omitempty"`
 }
 
+// FromDO converts the Kubernetes object to a DO object.
 func (dbu *DatabaseUser) FromDO(doDbUser godo.DatabaseUser) {
 	dbu.Name = doDbUser.Name
 	dbu.Role = doDbUser.Role
 	dbu.Password = doDbUser.Password
-}
-
-func (dbu *DatabaseUser) ToDO() godo.DatabaseUser {
-	return godo.DatabaseUser{
-		Name:     dbu.Name,
-		Role:     dbu.Role,
-		Password: dbu.Password,
-	}
 }
 
 // DatabaseMaintenanceWindow represents the maintenance_window of a database
@@ -152,6 +147,7 @@ type DatabaseMaintenanceWindow struct {
 	Description []string `json:"description,omitempty"`
 }
 
+// FromDO converts the Kubernetes object to a DO object.
 func (w *DatabaseMaintenanceWindow) FromDO(d *godo.DatabaseMaintenanceWindow) {
 	w.Day = d.Day
 	w.Hour = d.Hour
