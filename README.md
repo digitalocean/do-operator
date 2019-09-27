@@ -9,14 +9,7 @@ First create a `Secret` containing your DigitalOcean API token:
 kubectl create secret generic do-operator --from-literal="DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}"
 ```
 
-If you want to install the latest development version:
-```sh
-git clone git@github.com:snormore/do-operator.git
-cd do-operator
-kubectl apply -f releases/dev/manifest.yaml
-```
-
-Otherwise you can just install the latest release with:
+Install the latest release into your cluster with:
 ```
 kubectl apply -f https://raw.githubusercontent.com/digitalocean/do-operator/master/releases/v0.0.2/manifest.yaml
 ```
