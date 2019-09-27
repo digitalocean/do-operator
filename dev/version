@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+cd cmd/version
+go run main.go
