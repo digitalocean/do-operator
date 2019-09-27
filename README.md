@@ -39,3 +39,5 @@ Check the status:
 ```sh
 kubectl describe database example
 ```
+
+A couple secrets will be created for each `Database` instance; `example-connection` and `example-private-connection`.
