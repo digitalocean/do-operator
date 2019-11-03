@@ -119,8 +119,8 @@ func (in *DatabaseStatus) DeepCopyInto(out *DatabaseStatus) {
 		*out = make([]DatabaseUser, len(*in))
 		copy(*out, *in)
 	}
-	if in.DBNames != nil {
-		in, out := &in.DBNames, &out.DBNames
+	if in.DbNames != nil {
+		in, out := &in.DbNames, &out.DbNames
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

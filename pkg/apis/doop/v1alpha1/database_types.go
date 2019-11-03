@@ -15,12 +15,12 @@ import (
 // https://github.com/digitalocean/godo/blob/master/databases.go#L125
 type DatabaseSpec struct {
 	Name               string   `json:"name,omitempty"`
-	EngineSlug         string   `json:"engine,omitempty"`
+	Engine             string   `json:"engine,omitempty"`
 	Version            string   `json:"version,omitempty"`
-	SizeSlug           string   `json:"size,omitempty"`
+	Size               string   `json:"size,omitempty"`
 	Region             string   `json:"region,omitempty"`
-	NumNodes           int      `json:"num_nodes,omitempty"`
-	PrivateNetworkUUID string   `json:"private_network_uuid"`
+	NumNodes           int      `json:"numNodes,omitempty"`
+	PrivateNetworkUuid string   `json:"privateNetworkUuid"`
 	Tags               []string `json:"tags,omitempty"`
 }
 
@@ -28,12 +28,12 @@ type DatabaseSpec struct {
 func (s *DatabaseSpec) ToDO() *godo.DatabaseCreateRequest {
 	return &godo.DatabaseCreateRequest{
 		Name:               s.Name,
-		EngineSlug:         s.EngineSlug,
+		EngineSlug:         s.Engine,
 		Version:            s.Version,
-		SizeSlug:           s.SizeSlug,
+		SizeSlug:           s.Size,
 		Region:             s.Region,
 		NumNodes:           s.NumNodes,
-		PrivateNetworkUUID: s.PrivateNetworkUUID,
+		PrivateNetworkUUID: s.PrivateNetworkUuid,
 		Tags:               s.Tags,
 	}
 }
@@ -44,17 +44,17 @@ func (s *DatabaseSpec) ToDO() *godo.DatabaseCreateRequest {
 type DatabaseStatus struct {
 	ID                 string                     `json:"id,omitempty"`
 	Name               string                     `json:"name,omitempty"`
-	EngineSlug         string                     `json:"engine,omitempty"`
-	VersionSlug        string                     `json:"version,omitempty"`
+	Engine             string                     `json:"engine,omitempty"`
+	Version            string                     `json:"version,omitempty"`
 	Users              []DatabaseUser             `json:"users,omitempty"`
-	NumNodes           int                        `json:"num_nodes,omitempty"`
-	SizeSlug           string                     `json:"size,omitempty"`
-	DBNames            []string                   `json:"db_names,omitempty"`
-	RegionSlug         string                     `json:"region,omitempty"`
+	NumNodes           int                        `json:"numNodes,omitempty"`
+	Size               string                     `json:"size,omitempty"`
+	DbNames            []string                   `json:"dbNames,omitempty"`
+	Region             string                     `json:"region,omitempty"`
 	Status             string                     `json:"status,omitempty"`
-	MaintenanceWindow  *DatabaseMaintenanceWindow `json:"maintenance_window,omitempty"`
-	CreatedAt          *metav1.Time               `json:"created_at,omitempty"`
-	PrivateNetworkUUID string                     `json:"private_network_uuid,omitempty"`
+	MaintenanceWindow  *DatabaseMaintenanceWindow `json:"maintenanceWindow,omitempty"`
+	CreatedAt          *metav1.Time               `json:"createdAt,omitempty"`
+	PrivateNetworkUuid string                     `json:"privateNetworkUuid,omitempty"`
 	Tags               []string                   `json:"tags,omitempty"`
 }
 
@@ -75,17 +75,17 @@ func (s *DatabaseStatus) FromDO(d *godo.Database) {
 
 	s.ID = d.ID
 	s.Name = d.Name
-	s.EngineSlug = d.EngineSlug
-	s.VersionSlug = d.VersionSlug
+	s.Engine = d.EngineSlug
+	s.Version = d.VersionSlug
 	s.Users = users
 	s.NumNodes = d.NumNodes
-	s.SizeSlug = d.SizeSlug
-	s.DBNames = d.DBNames
-	s.RegionSlug = d.RegionSlug
+	s.Size = d.SizeSlug
+	s.DbNames = d.DBNames
+	s.Region = d.RegionSlug
 	s.Status = d.Status
 	s.MaintenanceWindow = maintenanceWindow
 	s.CreatedAt = &metav1.Time{Time: d.CreatedAt}
-	s.PrivateNetworkUUID = d.PrivateNetworkUUID
+	s.PrivateNetworkUuid = d.PrivateNetworkUUID
 	s.Tags = d.Tags
 }
 
