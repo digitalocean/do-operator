@@ -26,7 +26,7 @@ spec:
   version: "5"
   size: db-s-2vcpu-4gb
   region: sfo2
-  num_nodes: 2
+  numNodes: 2
   tags:
   - test
   - doop
