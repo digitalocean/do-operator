@@ -2,6 +2,8 @@ A Kubernetes [operator](https://github.com/operator-framework/operator-sdk) for 
 
 [![CircleCI](https://circleci.com/gh/digitalocean/do-operator.svg?style=svg)](https://circleci.com/gh/digitalocean/do-operator)
 
+**This operator is experimental and is not production-ready**.
+
 ## Usage
 
 Create a `Secret` containing your DigitalOcean API token:
