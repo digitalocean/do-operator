@@ -1,0 +1,11 @@
+apiVersion: databases.digitalocean.com/v1alpha1
+kind: DatabaseCluster
+metadata:
+  name: sample-mysql-database
+spec:
+  engine: mysql
+  name: sample-mysql-database
+  version: '8'
+  numNodes: 1
+  size: db-s-1vcpu-1gb
+  region: tor1

@@ -1,0 +1,84 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.0
+  creationTimestamp: null
+  name: databaseclusters.databases.digitalocean.com
+spec:
+  group: databases.digitalocean.com
+  names:
+    kind: DatabaseCluster
+    listKind: DatabaseClusterList
+    plural: databaseclusters
+    singular: databasecluster
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DatabaseCluster is the Schema for the databaseclusters API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DatabaseClusterSpec defines the desired state of DatabaseCluster
+            properties:
+              engine:
+                description: Engine is the database engine to use.
+                type: string
+              name:
+                description: Name is the name of the database cluster.
+                type: string
+              numNodes:
+                description: NumNodes is the number of nodes in the database cluster.
+                format: int64
+                type: integer
+              region:
+                description: Region is the slug of the DO region for the cluster.
+                type: string
+              size:
+                description: Size is the slug of the node size to use.
+                type: string
+              version:
+                description: Version is the DB version to use.
+                type: string
+            required:
+            - engine
+            - name
+            - numNodes
+            - region
+            - size
+            - version
+            type: object
+          status:
+            description: DatabaseClusterStatus defines the observed state of DatabaseCluster
+            properties:
+              createdAt:
+                description: CreatedAt is the time at which the database cluster was
+                  created.
+                format: date-time
+                type: string
+              status:
+                description: Status is the status of the database cluster.
+                type: string
+              uuid:
+                description: UUID is the UUID of the database cluster.
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
