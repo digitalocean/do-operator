@@ -1,0 +1,6 @@
+apiVersion: databases.digitalocean.com/v1alpha1
+kind: DatabaseClusterReference
+metadata:
+  name: sample-db-reference
+spec:
+  uuid: f7abfa68-bd4d-4a56-8155-61042028658c

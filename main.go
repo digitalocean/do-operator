@@ -33,9 +33,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/digitalocean/godo"
+
 	databasesv1alpha1 "github.com/digitalocean/do-operator/api/v1alpha1"
 	"github.com/digitalocean/do-operator/controllers"
-	"github.com/digitalocean/godo"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -110,6 +111,14 @@ func main() {
 		GodoClient: godoClient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DatabaseCluster")
+		os.Exit(1)
+	}
+	if err = (&controllers.DatabaseClusterReferenceReconciler{
+		Client:     mgr.GetClient(),
+		Scheme:     mgr.GetScheme(),
+		GodoClient: godoClient,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DatabaseClusterReference")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
