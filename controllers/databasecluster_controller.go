@@ -50,6 +50,7 @@ type DatabaseClusterReconciler struct {
 //+kubebuilder:rbac:groups=databases.digitalocean.com,resources=databaseclusters,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=databases.digitalocean.com,resources=databaseclusters/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=databases.digitalocean.com,resources=databaseclusters/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=configmaps;secrets,verbs=create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -141,6 +142,12 @@ func (r *DatabaseClusterReconciler) reconcileNewDB(ctx context.Context, cluster 
 	cluster.Status.CreatedAt = metav1.NewTime(db.CreatedAt)
 	cluster.Status.Status = db.Status
 
+	err = r.ensureOwnedObjects(ctx, cluster, db)
+	if err != nil {
+		ll.Error(err, "unable to ensure DB-related objects")
+		return ctrl.Result{}, fmt.Errorf("ensuring DB-related objects: %v", err)
+	}
+
 	return ctrl.Result{RequeueAfter: time.Minute}, nil
 }
 
@@ -189,6 +196,12 @@ func (r *DatabaseClusterReconciler) reconcileExistingDB(ctx context.Context, clu
 		}
 	}
 
+	err = r.ensureOwnedObjects(ctx, cluster, db)
+	if err != nil {
+		ll.Error(err, "unable to ensure DB-related objects")
+		return ctrl.Result{}, fmt.Errorf("ensuring DB-related objects: %v", err)
+	}
+
 	return ctrl.Result{RequeueAfter: requeueTime}, nil
 }
 
@@ -210,6 +223,32 @@ func (r *DatabaseClusterReconciler) reconcileDeletedDB(ctx context.Context, clus
 	controllerutil.RemoveFinalizer(cluster, finalizerName)
 
 	return ctrl.Result{}, nil
+}
+
+func (r *DatabaseClusterReconciler) ensureOwnedObjects(ctx context.Context, cluster *v1alpha1.DatabaseCluster, db *godo.Database) error {
+	objs := []client.Object{}
+	if db.Connection != nil {
+		objs = append(objs, connectionConfigMapForDB("-connection", cluster, db.Connection))
+	}
+	if db.PrivateConnection != nil {
+		objs = append(objs, connectionConfigMapForDB("-private-connection", cluster, db.PrivateConnection))
+	}
+
+	if db.Connection != nil && db.Connection.Password != "" {
+		// MongoDB doesn't return the default user password with the DB except
+		// on creation. Don't update the credentials if the password is empty,
+		// but create the secret if we have the password.
+		objs = append(objs, credentialsSecretForDefaultDBUser(cluster, db))
+	}
+
+	for _, obj := range objs {
+		controllerutil.SetControllerReference(cluster, obj, r.Scheme)
+		if err := r.Patch(ctx, obj, client.Apply, client.ForceOwnership, client.FieldOwner("do-operator")); err != nil {
+			return fmt.Errorf("applying object %s: %s", client.ObjectKeyFromObject(obj), err)
+		}
+	}
+
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -27,6 +27,7 @@ import (
 	utilerror "k8s.io/apimachinery/pkg/util/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/digitalocean/do-operator/api/v1alpha1"
@@ -105,7 +106,39 @@ func (r *DatabaseClusterReferenceReconciler) Reconcile(ctx context.Context, req 
 	ref.Status.Status = db.Status
 	ref.Status.CreatedAt = metav1.NewTime(db.CreatedAt)
 
+	err = r.ensureOwnedObjects(ctx, &ref, db)
+	if err != nil {
+		ll.Error(err, "unable to ensure DB-related objects")
+		return ctrl.Result{}, fmt.Errorf("ensuring DB-related objects: %v", err)
+	}
+
 	return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil
+}
+
+func (r *DatabaseClusterReferenceReconciler) ensureOwnedObjects(ctx context.Context, cluster *v1alpha1.DatabaseClusterReference, db *godo.Database) error {
+	objs := []client.Object{}
+	if db.Connection != nil {
+		objs = append(objs, connectionConfigMapForDB("-connection", cluster, db.Connection))
+	}
+	if db.PrivateConnection != nil {
+		objs = append(objs, connectionConfigMapForDB("-private-connection", cluster, db.PrivateConnection))
+	}
+
+	if db.Connection != nil && db.Connection.Password != "" {
+		// MongoDB doesn't return the default user password with the DB except
+		// on creation. Don't update the credentials if the password is empty,
+		// but create the secret if we have the password.
+		objs = append(objs, credentialsSecretForDefaultDBUser(cluster, db))
+	}
+
+	for _, obj := range objs {
+		controllerutil.SetControllerReference(cluster, obj, r.Scheme)
+		if err := r.Patch(ctx, obj, client.Apply, client.ForceOwnership, client.FieldOwner("do-operator")); err != nil {
+			return fmt.Errorf("applying object %s: %s", client.ObjectKeyFromObject(obj), err)
+		}
+	}
+
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
