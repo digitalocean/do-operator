@@ -24,6 +24,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
+const (
+	// DatabaseClusterKind is the kind of a DatabaseCluster.
+	DatabaseClusterKind = "DatabaseCluster"
+	// DatabaseClusterReferenceKind is the kind of a DatabaseClusterReference.
+	DatabaseClusterReferenceKind = "DatabaseClusterReference"
+)
+
 var (
 	// GroupVersion is group version used to register these objects
 	GroupVersion = schema.GroupVersion{Group: "databases.digitalocean.com", Version: "v1alpha1"}
