@@ -104,6 +104,15 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&DatabaseClusterReferenceReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+		GodoClient: &godo.Client{
+			Databases: fakeDatabasesService,
+		},
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
 	ctx, cancel = context.WithCancel(context.Background())
 	go func() {
 		defer GinkgoRecover()

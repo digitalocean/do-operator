@@ -47,6 +47,13 @@ type DatabaseClusterReferenceReconciler struct {
 //+kubebuilder:rbac:groups=databases.digitalocean.com,resources=databaseclusterreferences/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=databases.digitalocean.com,resources=databaseclusterreferences/finalizers,verbs=update
 
+var (
+	// clusterReferenceRefereshTime is how often we refresh the
+	// DatabaseClusterReference status from the DO API. It's a variable so we
+	// can adjust it for expedient integration testing.
+	clusterReferenceRefreshTime = 5 * time.Minute
+)
+
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 func (r *DatabaseClusterReferenceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, retErr error) {
@@ -112,7 +119,7 @@ func (r *DatabaseClusterReferenceReconciler) Reconcile(ctx context.Context, req 
 		return ctrl.Result{}, fmt.Errorf("ensuring DB-related objects: %v", err)
 	}
 
-	return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil
+	return ctrl.Result{RequeueAfter: clusterReferenceRefreshTime}, nil
 }
 
 func (r *DatabaseClusterReferenceReconciler) ensureOwnedObjects(ctx context.Context, cluster *v1alpha1.DatabaseClusterReference, db *godo.Database) error {
