@@ -38,6 +38,12 @@ spec:
         - /manager
         args:
         - --leader-elect
+        env:
+        - name: DO_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: do-api-token
+              key: access-token
         image: controller:latest
         name: manager
         securityContext:
