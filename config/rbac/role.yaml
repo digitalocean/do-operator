@@ -14,6 +14,13 @@ rules:
   - create
   - patch
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - patch
+- apiGroups:
   - databases.digitalocean.com
   resources:
   - databaseclusterreferences
@@ -61,6 +68,32 @@ rules:
   - databases.digitalocean.com
   resources:
   - databaseclusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseusers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseusers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseusers/status
   verbs:
   - get
   - patch

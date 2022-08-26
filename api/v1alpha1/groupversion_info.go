@@ -29,6 +29,8 @@ const (
 	DatabaseClusterKind = "DatabaseCluster"
 	// DatabaseClusterReferenceKind is the kind of a DatabaseClusterReference.
 	DatabaseClusterReferenceKind = "DatabaseClusterReference"
+	// DatabaseUserKind is the kind of a DatabaseUser.
+	DatabaseUserKind = "DatabaseUser"
 )
 
 var (
