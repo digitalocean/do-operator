@@ -25,10 +25,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/digitalocean/do-operator/fakegodo"
 	"github.com/digitalocean/godo"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/digitalocean/do-operator/fakegodo"
 
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	//+kubebuilder:scaffold:imports
@@ -113,6 +114,9 @@ var _ = BeforeSuite(func() {
 	err = (&DatabaseClusterReference{}).SetupWebhookWithManager(mgr, godoClient)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = (&DatabaseUser{}).SetupWebhookWithManager(mgr, godoClient)
+	Expect(err).NotTo(HaveOccurred())
+
 	//+kubebuilder:scaffold:webhook
 
 	go func() {
@@ -133,6 +137,8 @@ var _ = BeforeSuite(func() {
 		return nil
 	}).Should(Succeed())
 
+	// Create fixtures for tests.
+	createUserWebhookTestFixtures()
 }, 60)
 
 var _ = AfterSuite(func() {

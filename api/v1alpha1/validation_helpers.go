@@ -4,20 +4,36 @@ import (
 	"sync"
 
 	"github.com/digitalocean/godo"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// godoClient is the godo client used to validate objects in validating
-// webhooks. It's a package global because there's no tidy way to scope it to a
-// specific webhook, and it's concurrency-safe anyway.
 var (
+	// godoClient is the godo client used to validate objects in validating
+	// webhooks. It's a package global because there's no tidy way to scope it to a
+	// specific webhook, and it's concurrency-safe anyway.
 	godoClient     *godo.Client
 	godoClientOnce sync.Once
+
+	// webhookClient is the k8s client used to validate objects in validating
+	// webhooks. It's a package global because there's no tidy way to scope it
+	// to a specific webhook, and it's concurrency-safe anyway.
+	webhookClient     client.Client
+	webhookClientOnce sync.Once
 )
 
-// initGodoClientOnce initializes the package-global godo client. It should be
+// initGlobalGodoClient initializes the package-global godo client. It should be
 // called by each webhook setup function.
 func initGlobalGodoClient(client *godo.Client) {
 	godoClientOnce.Do(func() {
 		godoClient = client
+	})
+}
+
+// initGlobalK8sClient initializes the package-global k8s client. It should be
+// called by the webhook setup functions for all webhooks that require a k8s
+// client.
+func initGlobalK8sClient(cl client.Client) {
+	webhookClientOnce.Do(func() {
+		webhookClient = cl
 	})
 }
