@@ -1,0 +1,22 @@
+---
+apiVersion: databases.digitalocean.com/v1alpha1
+kind: DatabaseUserReference
+metadata:
+  name: databasecluster-user-reference
+spec:
+  databaseCluster:
+    apiGroup: databases.digitalocean.com
+    kind: DatabaseCluster
+    name: sample-mysql-database
+  username: reference_user_1
+---
+apiVersion: databases.digitalocean.com/v1alpha1
+kind: DatabaseUserReference
+metadata:
+  name: databaseclusterreference-user-reference
+spec:
+  databaseCluster:
+    apiGroup: databases.digitalocean.com
+    kind: DatabaseClusterReference
+    name: sample-db-reference
+  username: reference_user_2

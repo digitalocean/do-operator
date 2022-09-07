@@ -75,6 +75,32 @@ rules:
 - apiGroups:
   - databases.digitalocean.com
   resources:
+  - databaseuserreferences
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseuserreferences/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseuserreferences/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
   - databaseusers
   verbs:
   - create

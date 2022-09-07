@@ -104,3 +104,11 @@ func mustCreateDatabaseClusterReference() *v1alpha1.DatabaseClusterReference {
 
 	return createdDBRef
 }
+
+func mustCreateGodoDBUser(clusterUUID string, username string) *godo.DatabaseUser {
+	user, _, err := fakeDatabasesService.CreateUser(context.Background(), clusterUUID, &godo.DatabaseCreateUserRequest{
+		Name: username,
+	})
+	Expect(err).NotTo(HaveOccurred())
+	return user
+}
