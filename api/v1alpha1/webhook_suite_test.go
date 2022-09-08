@@ -117,6 +117,9 @@ var _ = BeforeSuite(func() {
 	err = (&DatabaseUser{}).SetupWebhookWithManager(mgr, godoClient)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = (&DatabaseUserReference{}).SetupWebhookWithManager(mgr, godoClient)
+	Expect(err).NotTo(HaveOccurred())
+
 	//+kubebuilder:scaffold:webhook
 
 	go func() {
