@@ -21,6 +21,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"testing"
 	"time"
@@ -29,6 +31,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/digitalocean/do-operator/extgodo"
 	"github.com/digitalocean/do-operator/fakegodo"
 
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
@@ -108,9 +111,57 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	godoClient := &godo.Client{
-		Databases: fakeDatabasesService,
-	}
+	godoServer := httptest.NewServer(&fakegodo.Handler{
+		DatabaseOptions: &extgodo.DatabaseOptions{
+			OptionsByEngine: map[string]extgodo.DatabaseEngineOptions{
+				"mongodb": extgodo.DatabaseEngineOptions{
+					Regions:  []string{"dev0"},
+					Versions: []string{"6"},
+					Layouts: []*extgodo.DatabaseLayout{{
+						NumNodes: 1,
+						Sizes: []string{
+							"db-s-1vcpu-1gb",
+						},
+					}},
+				},
+				"mysql": extgodo.DatabaseEngineOptions{
+					Regions:  []string{"dev0"},
+					Versions: []string{"6"},
+					Layouts: []*extgodo.DatabaseLayout{
+						{
+							NumNodes: 1,
+							Sizes: []string{
+								"db-s-1vcpu-1gb",
+								"db-s-2vcpu-2gb",
+							},
+						},
+						{
+							NumNodes: 2,
+							Sizes: []string{
+								"db-s-1vcpu-1gb",
+								"db-s-2vcpu-2gb",
+							},
+						},
+					},
+				},
+				"redis": extgodo.DatabaseEngineOptions{
+					Regions:  []string{"dev0"},
+					Versions: []string{"6"},
+					Layouts: []*extgodo.DatabaseLayout{{
+						NumNodes: 1,
+						Sizes: []string{
+							"db-s-1vcpu-1gb",
+						},
+					}},
+				},
+			},
+		},
+	})
+
+	godoClient, err := godo.New(http.DefaultClient, godo.SetBaseURL(godoServer.URL))
+	Expect(err).NotTo(HaveOccurred())
+	godoClient.Databases = fakeDatabasesService
+
 	err = (&DatabaseClusterReference{}).SetupWebhookWithManager(mgr, godoClient)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -118,6 +169,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = (&DatabaseUserReference{}).SetupWebhookWithManager(mgr, godoClient)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&DatabaseCluster{}).SetupWebhookWithManager(mgr, godoClient)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:webhook

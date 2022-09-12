@@ -123,14 +123,7 @@ func (r *DatabaseClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 func (r *DatabaseClusterReconciler) reconcileNewDB(ctx context.Context, cluster *v1alpha1.DatabaseCluster) (ctrl.Result, error) {
 	ll := log.FromContext(ctx)
 
-	createReq := &godo.DatabaseCreateRequest{
-		EngineSlug: cluster.Spec.Engine,
-		Name:       cluster.Spec.Name,
-		Version:    cluster.Spec.Version,
-		SizeSlug:   cluster.Spec.Size,
-		Region:     cluster.Spec.Region,
-		NumNodes:   int(cluster.Spec.NumNodes),
-	}
+	createReq := cluster.Spec.ToGodoCreateRequest()
 	db, _, err := r.GodoClient.Databases.Create(ctx, createReq)
 	if err != nil {
 		ll.Error(err, "unable to create DB")

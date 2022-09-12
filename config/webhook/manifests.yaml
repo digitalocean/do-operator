@@ -11,6 +11,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-databases-digitalocean-com-v1alpha1-databasecluster
+  failurePolicy: Fail
+  name: vdatabasecluster.kb.io
+  rules:
+  - apiGroups:
+    - databases.digitalocean.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - databaseclusters
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-databases-digitalocean-com-v1alpha1-databaseclusterreference
   failurePolicy: Fail
   name: vdatabaseclusterreference.kb.io

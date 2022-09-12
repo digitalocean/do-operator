@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/digitalocean/do-operator/extgodo"
+	"github.com/digitalocean/godo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,6 +36,29 @@ type DatabaseClusterSpec struct {
 	Size string `json:"size"`
 	// Region is the slug of the DO region for the cluster.
 	Region string `json:"region"`
+}
+
+// ToGodoCreateRequest returns a create request for a database that will fulfill
+// the DatabaseClusterSpec.
+func (spec *DatabaseClusterSpec) ToGodoCreateRequest() *godo.DatabaseCreateRequest {
+	return &godo.DatabaseCreateRequest{
+		EngineSlug: spec.Engine,
+		Name:       spec.Name,
+		Version:    spec.Version,
+		SizeSlug:   spec.Size,
+		Region:     spec.Region,
+		NumNodes:   int(spec.NumNodes),
+	}
+}
+
+// ToGodoValidateCreateRequest returns a validation request for a database that
+// will fulfill the DatabaseClusterSpec.
+func (spec *DatabaseClusterSpec) ToGodoValidateCreateRequest() *extgodo.DatabaseValidateCreateRequest {
+	createReq := spec.ToGodoCreateRequest()
+	return &extgodo.DatabaseValidateCreateRequest{
+		DatabaseCreateRequest: *createReq,
+		DryRun:                true,
+	}
 }
 
 // DatabaseClusterStatus defines the observed state of DatabaseCluster
