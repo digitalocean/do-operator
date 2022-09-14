@@ -42,9 +42,11 @@ make install
 make docker-build docker-push IMG=<some-registry>/do-operator:tag
 ```
 	
-3. Generate a [DigitalOcean API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/) to use for testing.
+3. [Deploy cert-manager](https://cert-manager.io/docs/installation/), which is necessary to manage certificates for the webhooks.
 
-4. Create a local environment file containing your API token. Note that this file is in the `.gitignore` so it will remain local to your machine:
+4. Generate a [DigitalOcean API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/) to use for testing.
+
+5. Create a local environment file containing your API token. Note that this file is in the `.gitignore` so it will remain local to your machine:
 
 ```sh
 cat <<EOF > config/manager/do-api-token.env
@@ -54,7 +56,7 @@ EOF
 
 The contents of this file will be used to create a secret in the cluster, which is used by the operator deployment to manage resources in your DigitalOcean account.
 
-5. Deploy the controller to the cluster with the image specified by `IMG`:
+6. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
 make deploy IMG=<some-registry>/do-operator:tag
