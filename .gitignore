@@ -23,3 +23,6 @@ testbin/*
 *.swp
 *.swo
 *~
+
+# secrets
+config/manager/do-api-token.env

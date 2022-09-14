@@ -1,6 +1,5 @@
 resources:
 - manager.yaml
-- secret.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
@@ -9,3 +8,8 @@ configMapGenerator:
 - files:
   - controller_manager_config.yaml
   name: manager-config
+
+secretGenerator:
+- name: do-api-token
+  envs:
+  - do-api-token.env
