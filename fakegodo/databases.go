@@ -311,3 +311,38 @@ func (f *FakeDatabasesService) GetFirewallRules(_ context.Context, _ string) ([]
 func (f *FakeDatabasesService) UpdateFirewallRules(_ context.Context, _ string, _ *godo.DatabaseUpdateFirewallRulesRequest) (*godo.Response, error) {
 	panic("not implemented")
 }
+
+// GetPostgreSQLConfig ...
+func (f *FakeDatabasesService) GetPostgreSQLConfig(_ context.Context, _ string) (*godo.PostgreSQLConfig, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// GetRedisConfig ...
+func (f *FakeDatabasesService) GetRedisConfig(_ context.Context, _ string) (*godo.RedisConfig, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// GetMySQLConfig ...
+func (f *FakeDatabasesService) GetMySQLConfig(_ context.Context, _ string) (*godo.MySQLConfig, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// UpdatePostgreSQLConfig ...
+func (f *FakeDatabasesService) UpdatePostgreSQLConfig(_ context.Context, _ string, _ *godo.PostgreSQLConfig) (*godo.Response, error) {
+	panic("not implemented")
+}
+
+// UpdateRedisConfig ...
+func (f *FakeDatabasesService) UpdateRedisConfig(_ context.Context, _ string, _ *godo.RedisConfig) (*godo.Response, error) {
+	panic("not implemented")
+}
+
+// UpdateMySQLConfig ...
+func (f *FakeDatabasesService) UpdateMySQLConfig(_ context.Context, _ string, _ *godo.MySQLConfig) (*godo.Response, error) {
+	panic("not implemented")
+}
+
+// ListOptions ...
+func (f *FakeDatabasesService) ListOptions(todo context.Context) (*godo.DatabaseOptions, *godo.Response, error) {
+	panic("not implemented")
+}
