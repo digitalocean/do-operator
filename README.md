@@ -1,19 +1,39 @@
-# do-operator
+# `do-operator`: The Kubernetes Operator for DigitalOcean
 
 `do-operator` is a Kubernetes operator for managing and consuming DigitalOcean resources from a Kubernetes cluster.
 
 Currently it supports DigitalOcean Databases.
 
-## Getting Started
+## Status
 
-You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
-**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+**This project is in BETA.**
 
-### Running on the cluster
-1. Install Instances of Custom Resources:
+* This operator should not be depended upon for production use at this time.
+* The CRDs in this project are currently `v1alpha1` and may change in the future.
+* DigitalOcean supports this project on a best-effort basis via GitHub issues.
+
+## Usage
+
+See the full documentation in the [docs](docs/) directory.
+
+## Development
+
+The `do-operator` is built using [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder).
+The [Kubebuilder Book](https://book.kubebuilder.io/) is a useful reference for understanding how the pieces fit together.
+
+To test your changes you will need a Kubernetes cluster to run against.
+We suggest using [DigitalOcean Kubernetes](https://docs.digitalocean.com/products/kubernetes/), but you may use [KIND](https://sigs.k8s.io/kind) or any other cluster for testing.
+The following will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+
+**Note that you will be billed for any DigitalOcean resources you create via the operator while testing.**
+Make sure you are aware of [DigitalOcean's pricing](https://www.digitalocean.com/pricing) and clean up resources when you're finished testing.
+
+### Building and Installing
+
+1. Install the Custom Resource Definitions:
 
 ```sh
-kubectl apply -f config/samples/
+make install
 ```
 
 2. Build and push your image to the location specified by `IMG`:
@@ -22,60 +42,44 @@ kubectl apply -f config/samples/
 make docker-build docker-push IMG=<some-registry>/do-operator:tag
 ```
 	
-3. Deploy the controller to the cluster with the image specified by `IMG`:
+3. Generate a [DigitalOcean API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/) to use for testing.
+
+4. Create a local environment file containing your API token. Note that this file is in the `.gitignore` so it will remain local to your machine:
+
+```sh
+cat <<EOF > config/manager/do-api-token.env
+access-token=<your api token here>
+EOF
+```
+
+The contents of this file will be used to create a secret in the cluster, which is used by the operator deployment to manage resources in your DigitalOcean account.
+
+5. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
 make deploy IMG=<some-registry>/do-operator:tag
 ```
 
-### Uninstall CRDs
+### Undeploying the Controller
+
+To undeploy the controller from the cluster:
+
+```sh
+make undeploy
+```
+
+### Uninstalling the CRDs
+
 To delete the CRDs from the cluster:
 
 ```sh
 make uninstall
 ```
 
-### Undeploy controller
-UnDeploy the controller to the cluster:
-
-```sh
-make undeploy
-```
-
 ## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
 
-### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
-
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
-
-### Test It Out
-1. Install the CRDs into the cluster:
-
-```sh
-make install
-```
-
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
-
-```sh
-make run FLAGS='-do-api-token=<token>'
-```
-
-**NOTE:** You can also run this in one step by running: `make install run ...`
-
-### Modifying the API definitions
-If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
-
-```sh
-make manifests
-```
-
-**NOTE:** Run `make --help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+At DigitalOcean we value and love our community!
+If you have any issues or would like to contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
