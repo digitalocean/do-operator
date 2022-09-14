@@ -30,6 +30,8 @@ var (
 // * Delete deletes a previously-created database object.
 // * Resize updates a previously-created object with the provided parameters.
 type FakeDatabasesService struct {
+	Options *godo.DatabaseOptions
+
 	mu        sync.RWMutex
 	databases []godo.Database
 	users     map[string][]godo.DatabaseUser
@@ -344,5 +346,5 @@ func (f *FakeDatabasesService) UpdateMySQLConfig(_ context.Context, _ string, _ 
 
 // ListOptions ...
 func (f *FakeDatabasesService) ListOptions(todo context.Context) (*godo.DatabaseOptions, *godo.Response, error) {
-	panic("not implemented")
+	return f.Options, okResponse, nil
 }

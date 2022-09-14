@@ -37,3 +37,17 @@ func initGlobalK8sClient(cl client.Client) {
 		webhookClient = cl
 	})
 }
+
+func engineOptsFromOptions(opts *godo.DatabaseOptions, engine string) (godo.DatabaseEngineOptions, bool) {
+	switch engine {
+	case "mysql":
+		return opts.MySQLOptions, true
+	case "pg":
+		return opts.PostgresSQLOptions, true
+	case "redis":
+		return opts.RedisOptions, true
+	case "mongodb":
+		return opts.MongoDBOptions, true
+	}
+	return godo.DatabaseEngineOptions{}, false
+}

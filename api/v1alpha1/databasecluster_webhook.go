@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/digitalocean/do-operator/extgodo"
 	"github.com/digitalocean/godo"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -70,51 +69,46 @@ func (r *DatabaseCluster) ValidateCreate() error {
 			invalidSpecErr := field.Invalid(specField, r.Spec, godoErr.Message)
 
 			// Get options so we can show the valid engines, sizes, etc.
-			opts, err := extgodo.GetDatabaseOptions(ctx, godoClient)
+			opts, _, err := godoClient.Databases.ListOptions(ctx)
 			if err != nil {
 				databaseclusterlog.Error(err, "getting database options from the DigitalOcean api")
 				return invalidSpecErr
 			}
+			engineOpts, haveOpts := engineOptsFromOptions(opts, r.Spec.Engine)
 
 			switch godoErr.Message {
 			case "invalid cluster name":
 				return field.Invalid(specField.Child("name"), r.Spec.Name, godoErr.Message)
 			case "invalid node count":
 				var validNumNodes []string
-				engineOpts, ok := opts.OptionsByEngine[r.Spec.Engine]
-				if !ok {
+				if !haveOpts {
 					return field.Invalid(specField.Child("numNodes"), r.Spec.NumNodes, godoErr.Message)
 				}
 				for _, layout := range engineOpts.Layouts {
-					validNumNodes = append(validNumNodes, strconv.Itoa(layout.NumNodes))
+					validNumNodes = append(validNumNodes, strconv.Itoa(layout.NodeNum))
 				}
 				return field.NotSupported(specField.Child("numNodes"), r.Spec.NumNodes, validNumNodes)
 			case "invalid engine":
-				var validEngines []string
-				for engine := range opts.OptionsByEngine {
-					validEngines = append(validEngines, engine)
-				}
-				return field.NotSupported(specField.Child("engine"), r.Spec.Engine, validEngines)
+				// The options API doesn't return us the list of engines in a
+				// friendly format, so we just hardcode them.
+				return field.NotSupported(specField.Child("engine"), r.Spec.Engine, []string{"mysql", "pg", "redis", "mongodb"})
 			case "invalid size":
-				engineOpts, ok := opts.OptionsByEngine[r.Spec.Engine]
-				if !ok {
+				if !haveOpts {
 					return field.Invalid(specField.Child("size"), r.Spec.Size, godoErr.Message)
 				}
 				for _, layout := range engineOpts.Layouts {
-					if layout.NumNodes == int(r.Spec.NumNodes) {
+					if layout.NodeNum == int(r.Spec.NumNodes) {
 						return field.NotSupported(specField.Child("size"), r.Spec.Size, layout.Sizes)
 					}
 				}
 				return field.Invalid(specField.Child("size"), r.Spec.Size, godoErr.Message)
 			case "invalid region":
-				engineOpts, ok := opts.OptionsByEngine[r.Spec.Engine]
-				if !ok {
+				if !haveOpts {
 					return field.Invalid(specField.Child("region"), r.Spec.Region, godoErr.Message)
 				}
 				return field.NotSupported(specField.Child("region"), r.Spec.Region, engineOpts.Regions)
 			case "invalid cluster engine version":
-				engineOpts, ok := opts.OptionsByEngine[r.Spec.Engine]
-				if !ok {
+				if !haveOpts {
 					return field.Invalid(specField.Child("version"), r.Spec.Version, godoErr.Message)
 				}
 				return field.NotSupported(specField.Child("version"), r.Spec.Version, engineOpts.Versions)
@@ -158,11 +152,11 @@ func (r *DatabaseCluster) ValidateUpdate(old runtime.Object) error {
 		return field.Forbidden(regionPath, "database region migrations are not yet supported in the do-operator")
 	}
 
-	opts, err := extgodo.GetDatabaseOptions(ctx, godoClient)
+	opts, _, err := godoClient.Databases.ListOptions(ctx)
 	if err != nil {
 		return fmt.Errorf("getting database options from the DigitalOcean api: %v", err)
 	}
-	engineOpts, ok := opts.OptionsByEngine[r.Spec.Engine]
+	engineOpts, ok := engineOptsFromOptions(opts, r.Spec.Engine)
 	if !ok {
 		// We *should* get options back for all supported engines, but if the
 		// API is missing one we shouldn't block the user from updating.
@@ -170,18 +164,20 @@ func (r *DatabaseCluster) ValidateUpdate(old runtime.Object) error {
 	}
 
 	var (
-		selectedLayout *extgodo.DatabaseLayout
+		selectedLayout godo.DatabaseLayout
+		numNodesValid  bool
 		validNumNodes  []string
 		sizeValid      bool
 	)
 	for _, layout := range engineOpts.Layouts {
-		validNumNodes = append(validNumNodes, strconv.Itoa(layout.NumNodes))
-		if layout.NumNodes == int(r.Spec.NumNodes) {
+		validNumNodes = append(validNumNodes, strconv.Itoa(layout.NodeNum))
+		if layout.NodeNum == int(r.Spec.NumNodes) {
+			numNodesValid = true
 			selectedLayout = layout
 			break
 		}
 	}
-	if selectedLayout == nil {
+	if !numNodesValid {
 		numNodesPath := field.NewPath("spec").Child("numNodes")
 		return field.NotSupported(numNodesPath, r.Spec.NumNodes, validNumNodes)
 	}

@@ -10,19 +10,11 @@ import (
 // Handler is an HTTP handler that can handle requests we need to make that are
 // not yet supported in godo proper. This is for use with the httptest package
 // in unit/integration tests.
-type Handler struct {
-	DatabaseOptions *extgodo.DatabaseOptions
-}
+type Handler struct{}
 
 // ServeHTTP implements http.Handler.
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
-	case "/v2/databases/options":
-		err := json.NewEncoder(rw).Encode(h.DatabaseOptions)
-		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
 	case "/v2/databases":
 		if r.Body == nil {
 			rw.WriteHeader(http.StatusBadRequest)
@@ -41,10 +33,10 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for engine := range h.DatabaseOptions.OptionsByEngine {
-			if engine == createReq.EngineSlug {
-				rw.WriteHeader(http.StatusOK)
-			}
+		switch createReq.EngineSlug {
+		case "mysql", "pg", "mongodb", "redis":
+			rw.WriteHeader(http.StatusOK)
+			return
 		}
 
 		rw.WriteHeader(http.StatusBadRequest)

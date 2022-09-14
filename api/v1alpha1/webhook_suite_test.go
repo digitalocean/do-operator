@@ -31,7 +31,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/digitalocean/do-operator/extgodo"
 	"github.com/digitalocean/do-operator/fakegodo"
 
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
@@ -55,7 +54,50 @@ var (
 	testEnv              *envtest.Environment
 	ctx                  context.Context
 	cancel               context.CancelFunc
-	fakeDatabasesService = &fakegodo.FakeDatabasesService{}
+	fakeDatabasesService = &fakegodo.FakeDatabasesService{
+		Options: &godo.DatabaseOptions{
+			MongoDBOptions: godo.DatabaseEngineOptions{
+				Regions:  []string{"dev0"},
+				Versions: []string{"6"},
+				Layouts: []godo.DatabaseLayout{{
+					NodeNum: 1,
+					Sizes: []string{
+						"db-s-1vcpu-1gb",
+					},
+				}},
+			},
+			MySQLOptions: godo.DatabaseEngineOptions{
+				Regions:  []string{"dev0"},
+				Versions: []string{"6"},
+				Layouts: []godo.DatabaseLayout{
+					{
+						NodeNum: 1,
+						Sizes: []string{
+							"db-s-1vcpu-1gb",
+							"db-s-2vcpu-2gb",
+						},
+					},
+					{
+						NodeNum: 2,
+						Sizes: []string{
+							"db-s-1vcpu-1gb",
+							"db-s-2vcpu-2gb",
+						},
+					},
+				},
+			},
+			RedisOptions: godo.DatabaseEngineOptions{
+				Regions:  []string{"dev0"},
+				Versions: []string{"6"},
+				Layouts: []godo.DatabaseLayout{{
+					NodeNum: 1,
+					Sizes: []string{
+						"db-s-1vcpu-1gb",
+					},
+				}},
+			},
+		},
+	}
 )
 
 func TestAPIs(t *testing.T) {
@@ -111,53 +153,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	godoServer := httptest.NewServer(&fakegodo.Handler{
-		DatabaseOptions: &extgodo.DatabaseOptions{
-			OptionsByEngine: map[string]extgodo.DatabaseEngineOptions{
-				"mongodb": extgodo.DatabaseEngineOptions{
-					Regions:  []string{"dev0"},
-					Versions: []string{"6"},
-					Layouts: []*extgodo.DatabaseLayout{{
-						NumNodes: 1,
-						Sizes: []string{
-							"db-s-1vcpu-1gb",
-						},
-					}},
-				},
-				"mysql": extgodo.DatabaseEngineOptions{
-					Regions:  []string{"dev0"},
-					Versions: []string{"6"},
-					Layouts: []*extgodo.DatabaseLayout{
-						{
-							NumNodes: 1,
-							Sizes: []string{
-								"db-s-1vcpu-1gb",
-								"db-s-2vcpu-2gb",
-							},
-						},
-						{
-							NumNodes: 2,
-							Sizes: []string{
-								"db-s-1vcpu-1gb",
-								"db-s-2vcpu-2gb",
-							},
-						},
-					},
-				},
-				"redis": extgodo.DatabaseEngineOptions{
-					Regions:  []string{"dev0"},
-					Versions: []string{"6"},
-					Layouts: []*extgodo.DatabaseLayout{{
-						NumNodes: 1,
-						Sizes: []string{
-							"db-s-1vcpu-1gb",
-						},
-					}},
-				},
-			},
-		},
-	})
-
+	godoServer := httptest.NewServer(&fakegodo.Handler{})
 	godoClient, err := godo.New(http.DefaultClient, godo.SetBaseURL(godoServer.URL))
 	Expect(err).NotTo(HaveOccurred())
 	godoClient.Databases = fakeDatabasesService
