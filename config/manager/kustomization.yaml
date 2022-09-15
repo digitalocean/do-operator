@@ -10,6 +10,6 @@ configMapGenerator:
   name: manager-config
 
 secretGenerator:
-- name: do-api-token
-  envs:
+- envs:
   - do-api-token.env
+  name: do-api-token
