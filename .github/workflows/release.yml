@@ -28,3 +28,27 @@ jobs:
         run: make docker-build docker-push
         env:
           IMG_TAG: ${{ github.event.inputs.tag }}
+      - name: Build and commit manifests
+        run: make release-manifests
+        env:
+          IMG_TAG: ${{ github.event.inputs.tag }}
+      - name: Commit manifests
+        uses: EndBug/add-and-commit@998652d28d7702d095d40f52ae42982a80ae8c7d
+        with:
+          message: "Create release manifests for ${{ github.event.inputs.tag }}"
+          add: "releases/"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: find target commit to tag
+        run: |
+          sha=$(git rev-parse HEAD)
+          echo "TARGET_SHA=$sha" >> $GITHUB_ENV
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          commitish: ${{ env.TARGET_SHA }}
+          tag_name: ${{ github.event.inputs.tag }}
+          release_name: ${{ github.event.inputs.tag }}
