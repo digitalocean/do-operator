@@ -100,6 +100,14 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
+##@ Release
+
+.PHONY: release-manifests
+release-manifests: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	mkdir -p releases
+	$(KUSTOMIZE) build config/default > releases/do-operator-${IMG_TAG}.yaml
+
 ##@ Build Dependencies
 
 ## Location to install dependencies to
