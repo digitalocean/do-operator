@@ -1,0 +1,856 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: do-operator-system
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: do-operator-system/do-operator-serving-cert
+    controller-gen.kubebuilder.io/version: v0.9.0
+  name: databaseclusterreferences.databases.digitalocean.com
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: do-operator-webhook-service
+          namespace: do-operator-system
+          path: /convert
+      conversionReviewVersions:
+      - v1
+  group: databases.digitalocean.com
+  names:
+    kind: DatabaseClusterReference
+    listKind: DatabaseClusterReferenceList
+    plural: databaseclusterreferences
+    singular: databaseclusterreference
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DatabaseClusterReference is the Schema for the databaseclusterreferences API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DatabaseClusterReferenceSpec defines the desired state of DatabaseClusterReference
+            properties:
+              uuid:
+                description: UUID is the UUID of an existing database.
+                type: string
+            required:
+            - uuid
+            type: object
+          status:
+            description: DatabaseClusterReferenceStatus defines the observed state of DatabaseClusterReference
+            properties:
+              createdAt:
+                description: CreatedAt is the time at which the database cluster was created.
+                format: date-time
+                type: string
+              engine:
+                description: Engine is the database engine to use.
+                type: string
+              name:
+                description: Name is the name of the database cluster.
+                type: string
+              numNodes:
+                description: NumNodes is the number of nodes in the database cluster.
+                format: int64
+                type: integer
+              region:
+                description: Region is the slug of the DO region for the cluster.
+                type: string
+              size:
+                description: Size is the slug of the node size to use.
+                type: string
+              status:
+                description: Status is the status of the database cluster.
+                type: string
+              version:
+                description: Version is the DB version to use.
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: do-operator-system/do-operator-serving-cert
+    controller-gen.kubebuilder.io/version: v0.9.0
+  name: databaseclusters.databases.digitalocean.com
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: do-operator-webhook-service
+          namespace: do-operator-system
+          path: /convert
+      conversionReviewVersions:
+      - v1
+  group: databases.digitalocean.com
+  names:
+    kind: DatabaseCluster
+    listKind: DatabaseClusterList
+    plural: databaseclusters
+    singular: databasecluster
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DatabaseCluster is the Schema for the databaseclusters API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DatabaseClusterSpec defines the desired state of DatabaseCluster
+            properties:
+              engine:
+                description: Engine is the database engine to use.
+                type: string
+              name:
+                description: Name is the name of the database cluster.
+                type: string
+              numNodes:
+                description: NumNodes is the number of nodes in the database cluster.
+                format: int64
+                type: integer
+              region:
+                description: Region is the slug of the DO region for the cluster.
+                type: string
+              size:
+                description: Size is the slug of the node size to use.
+                type: string
+              version:
+                description: Version is the DB version to use.
+                type: string
+            required:
+            - engine
+            - name
+            - numNodes
+            - region
+            - size
+            - version
+            type: object
+          status:
+            description: DatabaseClusterStatus defines the observed state of DatabaseCluster
+            properties:
+              createdAt:
+                description: CreatedAt is the time at which the database cluster was created.
+                format: date-time
+                type: string
+              status:
+                description: Status is the status of the database cluster.
+                type: string
+              uuid:
+                description: UUID is the UUID of the database cluster.
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: do-operator-system/do-operator-serving-cert
+    controller-gen.kubebuilder.io/version: v0.9.0
+  name: databaseuserreferences.databases.digitalocean.com
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: do-operator-webhook-service
+          namespace: do-operator-system
+          path: /convert
+      conversionReviewVersions:
+      - v1
+  group: databases.digitalocean.com
+  names:
+    kind: DatabaseUserReference
+    listKind: DatabaseUserReferenceList
+    plural: databaseuserreferences
+    singular: databaseuserreference
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DatabaseUserReference is the Schema for the databaseuserreferences API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DatabaseUserReferenceSpec defines the desired state of DatabaseUserReference
+            properties:
+              databaseCluster:
+                description: Cluster is a reference to the DatabaseCluster or DatabaseClusterReference that represents the database cluster in which the user exists.
+                properties:
+                  apiGroup:
+                    description: APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.
+                    type: string
+                  kind:
+                    description: Kind is the type of resource being referenced
+                    type: string
+                  name:
+                    description: Name is the name of resource being referenced
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
+              username:
+                description: Username is the username of the referenced user.
+                type: string
+            required:
+            - databaseCluster
+            - username
+            type: object
+          status:
+            description: DatabaseUserReferenceStatus defines the observed state of DatabaseUserReference
+            properties:
+              clusterUUID:
+                description: ClusterUUID is the UUID of the cluster this user is in. We keep this in the status so that we can reference the user even if the referenced Cluster CR is deleted.
+                type: string
+              role:
+                description: Role is the user's role.
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: do-operator-system/do-operator-serving-cert
+    controller-gen.kubebuilder.io/version: v0.9.0
+  name: databaseusers.databases.digitalocean.com
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: do-operator-webhook-service
+          namespace: do-operator-system
+          path: /convert
+      conversionReviewVersions:
+      - v1
+  group: databases.digitalocean.com
+  names:
+    kind: DatabaseUser
+    listKind: DatabaseUserList
+    plural: databaseusers
+    singular: databaseuser
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DatabaseUser is the Schema for the databaseusers API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DatabaseUserSpec defines the desired state of DatabaseUser
+            properties:
+              databaseCluster:
+                description: Cluster is a reference to the DatabaseCluster or DatabaseClusterReference that represents the database cluster in which the user will be created.
+                properties:
+                  apiGroup:
+                    description: APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.
+                    type: string
+                  kind:
+                    description: Kind is the type of resource being referenced
+                    type: string
+                  name:
+                    description: Name is the name of resource being referenced
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
+              username:
+                description: Username is the username for the user.
+                type: string
+            required:
+            - databaseCluster
+            - username
+            type: object
+          status:
+            description: DatabaseUserStatus defines the observed state of DatabaseUser
+            properties:
+              clusterUUID:
+                description: ClusterUUID is the UUID of the cluster this user is in. We keep this in the status so that we can manage the user even if the referenced Cluster CR is deleted.
+                type: string
+              role:
+                description: Role is the user's role.
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: do-operator-controller-manager
+  namespace: do-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: do-operator-leader-election-role
+  namespace: do-operator-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: do-operator-manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - secrets
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseclusterreferences
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseclusterreferences/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseclusterreferences/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseclusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseuserreferences
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseuserreferences/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseuserreferences/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseusers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseusers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databaseusers/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: do-operator-metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: do-operator-proxy-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: do-operator-leader-election-rolebinding
+  namespace: do-operator-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: do-operator-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: do-operator-controller-manager
+  namespace: do-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: do-operator-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: do-operator-manager-role
+subjects:
+- kind: ServiceAccount
+  name: do-operator-controller-manager
+  namespace: do-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: do-operator-proxy-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: do-operator-proxy-role
+subjects:
+- kind: ServiceAccount
+  name: do-operator-controller-manager
+  namespace: do-operator-system
+---
+apiVersion: v1
+data:
+  controller_manager_config.yaml: |
+    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+    kind: ControllerManagerConfig
+    health:
+      healthProbeBindAddress: :8081
+    metrics:
+      bindAddress: 127.0.0.1:8080
+    webhook:
+      port: 9443
+    leaderElection:
+      leaderElect: true
+      resourceName: f103eaf3.digitalocean.com
+    # leaderElectionReleaseOnCancel defines if the leader should step down volume
+    # when the Manager ends. This requires the binary to immediately end when the
+    # Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
+    # speeds up voluntary leader transitions as the new leader don't have to wait
+    # LeaseDuration time first.
+    # In the default scaffold provided, the program ends immediately after
+    # the manager stops, so would be fine to enable this option. However,
+    # if you are doing or is intended to do any operation such as perform cleanups
+    # after the manager stops then its usage might be unsafe.
+    # leaderElectionReleaseOnCancel: true
+kind: ConfigMap
+metadata:
+  name: do-operator-manager-config
+  namespace: do-operator-system
+---
+apiVersion: v1
+data:
+  access-token: NmZkYTAyZTlhY2JkYmZjODA3NDQxMjA4NTMzNzBjZjJhMzBkODY4NzUwZjJhMTc4YmZhYjI3M2VkZDVmYWIzOQ==
+kind: Secret
+metadata:
+  name: do-operator-do-api-token
+  namespace: do-operator-system
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: do-operator-controller-manager-metrics-service
+  namespace: do-operator-system
+spec:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: https
+  selector:
+    control-plane: controller-manager
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: do-operator-webhook-service
+  namespace: do-operator-system
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 9443
+  selector:
+    control-plane: controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: do-operator-controller-manager
+  namespace: do-operator-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        control-plane: controller-manager
+    spec:
+      containers:
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=0
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.12.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 5m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      - args:
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=127.0.0.1:8080
+        - --leader-elect
+        - --do-api-token=$(DO_API_TOKEN)
+        command:
+        - /manager
+        env:
+        - name: DO_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: access-token
+              name: do-operator-do-api-token
+        image: docker.io/digitalocean/do-operator:0.1.2
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        ports:
+        - containerPort: 9443
+          name: webhook-server
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: cert
+          readOnly: true
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: do-operator-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: webhook-server-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: do-operator-serving-cert
+  namespace: do-operator-system
+spec:
+  dnsNames:
+  - do-operator-webhook-service.do-operator-system.svc
+  - do-operator-webhook-service.do-operator-system.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: do-operator-selfsigned-issuer
+  secretName: webhook-server-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: do-operator-selfsigned-issuer
+  namespace: do-operator-system
+spec:
+  selfSigned: {}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: do-operator-system/do-operator-serving-cert
+  name: do-operator-validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: do-operator-webhook-service
+      namespace: do-operator-system
+      path: /validate-databases-digitalocean-com-v1alpha1-databasecluster
+  failurePolicy: Fail
+  name: vdatabasecluster.kb.io
+  rules:
+  - apiGroups:
+    - databases.digitalocean.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - databaseclusters
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: do-operator-webhook-service
+      namespace: do-operator-system
+      path: /validate-databases-digitalocean-com-v1alpha1-databaseclusterreference
+  failurePolicy: Fail
+  name: vdatabaseclusterreference.kb.io
+  rules:
+  - apiGroups:
+    - databases.digitalocean.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - databaseclusterreferences
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: do-operator-webhook-service
+      namespace: do-operator-system
+      path: /validate-databases-digitalocean-com-v1alpha1-databaseuser
+  failurePolicy: Fail
+  name: vdatabaseuser.kb.io
+  rules:
+  - apiGroups:
+    - databases.digitalocean.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - databaseusers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: do-operator-webhook-service
+      namespace: do-operator-system
+      path: /validate-databases-digitalocean-com-v1alpha1-databaseuserreference
+  failurePolicy: Fail
+  name: vdatabaseuserreference.kb.io
+  rules:
+  - apiGroups:
+    - databases.digitalocean.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - databaseuserreferences
+  sideEffects: None
