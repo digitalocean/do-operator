@@ -29,7 +29,9 @@ jobs:
         env:
           IMG_TAG: ${{ github.event.inputs.tag }}
       - name: Build and commit manifests
-        run: make release-manifests
+        run: |
+          echo 'access-token=<your api token here>' > config/manager/do-api-token.env
+          make release-manifests
         env:
           IMG_TAG: ${{ github.event.inputs.tag }}
       - name: Commit manifests
