@@ -1,0 +1,24 @@
+name: test
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+env:
+  GITHUB_ENV: ".env"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ^1.19
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+      - name: Install kubebuilder
+        uses: RyanSiu1995/kubebuilder-action@v1.2
+        with:
+          version: 3.5.0
+      - name: Run make test
+        run: make test
