@@ -16,9 +16,5 @@ jobs:
           go-version: ^1.19
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
-      - name: Install kubebuilder
-        uses: RyanSiu1995/kubebuilder-action@v1.2
-        with:
-          version: 3.5.0
       - name: Run make test
         run: make test
