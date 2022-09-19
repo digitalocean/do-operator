@@ -104,6 +104,7 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 
 .PHONY: release-manifests
 release-manifests: manifests kustomize
+	echo 'access-token=<your api token here>' > config/manager/do-api-token.env
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	mkdir -p releases
 	$(KUSTOMIZE) build config/default > releases/do-operator-${IMG_TAG}.yaml
