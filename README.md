@@ -1,8 +1,8 @@
 # `do-operator`: The Kubernetes Operator for DigitalOcean
 
-`do-operator` is a Kubernetes operator for managing and consuming DigitalOcean resources from a Kubernetes cluster.
+`do-operator` is a Kubernetes operator for managing and consuming [DigitalOcean](https://www.digitalocean.com/) resources from a Kubernetes cluster.
 
-Currently it supports DigitalOcean Databases.
+Currently it supports [DigitalOcean Managed Databases](https://www.digitalocean.com/products/managed-databases).
 
 ## Status
 
