@@ -12,6 +12,27 @@ Currently it supports DigitalOcean Databases.
 * The CRDs in this project are currently `v1alpha1` and may change in the future.
 * DigitalOcean supports this project on a best-effort basis via GitHub issues.
 
+## Quick Start
+
+To install the operator on a Kubernetes cluster, you can follow these steps:
+
+1. Generate a [DigitalOcean API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/) and base64 encode it.
+2. Edit the manifest for the most recent version in the `releases/` directory. Find the `do-operator-do-api-token` Secret and replace the `access-token` value with your base64-encoded token:
+```yaml
+apiVersion: v1
+data:
+  access-token: <your base64-encoded token goes here>
+kind: Secret
+metadata:
+  name: do-operator-do-api-token
+  namespace: do-operator-system
+type: Opaque
+```
+3. Deploy the manifest:
+```sh
+kubectl apply -f releases/do-operator-<version>.yaml
+```
+
 ## Usage
 
 See the full documentation in the [docs](docs/) directory.
