@@ -42,6 +42,9 @@ type DatabaseUserStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+//+kubebuilder:printcolumn:name="Username",type=string,JSONPath=`.spec.username`
+//+kubebuilder:printcolumn:name="Role",type=string,JSONPath=`.status.role`
 
 // DatabaseUser is the Schema for the databaseusers API
 type DatabaseUser struct {

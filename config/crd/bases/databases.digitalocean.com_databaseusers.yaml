@@ -15,7 +15,17 @@ spec:
     singular: databaseuser
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - jsonPath: .spec.username
+      name: Username
+      type: string
+    - jsonPath: .status.role
+      name: Role
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: DatabaseUser is the Schema for the databaseusers API
