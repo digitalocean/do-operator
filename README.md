@@ -16,8 +16,12 @@ Currently it supports [DigitalOcean Managed Databases](https://www.digitalocean.
 
 To install the operator on a Kubernetes cluster, you can follow these steps:
 
-1. Generate a [DigitalOcean API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/) and base64 encode it.
-2. Edit the manifest for the most recent version in the `releases/` directory. Find the `do-operator-do-api-token` Secret and replace the `access-token` value with your base64-encoded token:
+1. Install cert-manager (if not already installed):
+```sh
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+```
+2. Generate a [DigitalOcean API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/) and base64 encode it.
+3. Edit the manifest for the most recent version in the `releases/` directory. Find the `do-operator-do-api-token` Secret and replace the `access-token` value with your base64-encoded token:
 ```yaml
 apiVersion: v1
 data:
@@ -28,7 +32,7 @@ metadata:
   namespace: do-operator-system
 type: Opaque
 ```
-3. Deploy the manifest:
+4. Deploy the manifest:
 ```sh
 kubectl apply -f releases/do-operator-<version>.yaml
 ```
