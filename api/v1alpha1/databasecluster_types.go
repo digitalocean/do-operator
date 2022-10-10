@@ -75,6 +75,9 @@ type DatabaseClusterStatus struct {
 //+kubebuilder:subresource:status
 
 // DatabaseCluster is the Schema for the databaseclusters API
+// +kubebuilder:printcolumn:name="Engine",type=string,JSONPath=`.spec.engine`
+// +kubebuilder:printcolumn:name="DO name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 type DatabaseCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
