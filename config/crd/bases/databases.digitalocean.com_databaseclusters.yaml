@@ -20,7 +20,7 @@ spec:
       name: Engine
       type: string
     - jsonPath: .spec.name
-      name: DO name
+      name: Cluster name
       type: string
     - jsonPath: .status.status
       name: Status
