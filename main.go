@@ -43,6 +43,7 @@ import (
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+	version  string
 )
 
 func init() {
@@ -73,7 +74,11 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	if version == "" {
+		version = "dev"
+	}
+
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)).WithValues("version", version))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -164,7 +169,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	setupLog.Info("starting manager")
+	setupLog.WithValues("version", version).Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
@@ -173,5 +178,5 @@ func main() {
 
 func makeGodo(ctx context.Context, token, addr string) (*godo.Client, error) {
 	client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}))
-	return godo.New(client, godo.SetBaseURL(addr))
+	return godo.New(client, godo.SetBaseURL(addr), godo.SetUserAgent("do-operator/"+version))
 }
