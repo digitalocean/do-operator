@@ -48,6 +48,10 @@ type DatabaseClusterReferenceStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Engine",type=string,JSONPath=`.status.engine`
+// +kubebuilder:printcolumn:name="Cluster name",type=string,JSONPath=`.status.name`
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 
 // DatabaseClusterReference is the Schema for the databaseclusterreferences API
 type DatabaseClusterReference struct {
