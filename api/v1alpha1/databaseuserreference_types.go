@@ -42,6 +42,10 @@ type DatabaseUserReferenceStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+//+kubebuilder:printcolumn:name="Cluster name",type=string,JSONPath=`.spec.databaseCluster.name`
+//+kubebuilder:printcolumn:name="Username",type=string,JSONPath=`.spec.username`
+//+kubebuilder:printcolumn:name="Role",type=string,JSONPath=`.status.role`
 
 // DatabaseUserReference is the Schema for the databaseuserreferences API
 type DatabaseUserReference struct {
