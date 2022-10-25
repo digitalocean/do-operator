@@ -61,12 +61,14 @@ Make sure you are aware of [DigitalOcean's pricing](https://www.digitalocean.com
 make install
 ```
 
-2. Build and push your image to the location specified by `IMG`:
-	
+**Note M1 Macbook users:** this project is made with Kubebuilder which uses `Kustomize v3.8.7` which doesn't have an ARM release and so you need to [manually install kustomize](#manually-installing-kustomize-m1-mac-users) for this step to succeed
+
+2. Build and push your image to the location specified by `IMG` (in the [Makefile](Makefile)):
+
 ```sh
 make docker-build docker-push IMG=<some-registry>/do-operator:tag
 ```
-	
+
 3. [Deploy cert-manager](https://cert-manager.io/docs/installation/), which is necessary to manage certificates for the webhooks.
 
 4. Generate a [DigitalOcean API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/) to use for testing.
@@ -102,6 +104,13 @@ To delete the CRDs from the cluster:
 ```sh
 make uninstall
 ```
+
+### Manually Installing Kustomize (M1 Mac users)
+1. Clone the [Kustomize project](https://github.com/kubernetes-sigs/kustomize)
+2. Go to the `v3.5.7` branch: `git checkout kustomize/v3.8.7`
+3. Go into the `kustomize` folder (so from the project root it would be `kustomize/kustomize/`)
+4. `go build .`
+5. Now move the generated `kustomize` binary into the `bin` directory in this project (create it if it doesn't exist `mkdir bin`): `mv kustomize <project path>/bin/kustomize`
 
 ## Contributing
 
