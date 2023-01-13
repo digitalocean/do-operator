@@ -1,6 +1,6 @@
 module github.com/digitalocean/do-operator
 
-go 1.18
+go 1.19
 
 require (
 	github.com/digitalocean/godo v1.83.0
