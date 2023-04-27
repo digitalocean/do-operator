@@ -60,7 +60,10 @@ func (f *FakeDatabasesService) Get(_ context.Context, dbUUID string) (*godo.Data
 
 // GetCA ...
 func (f *FakeDatabasesService) GetCA(_ context.Context, _ string) (*godo.DatabaseCA, *godo.Response, error) {
-	panic("not implemented")
+	ca := godo.DatabaseCA{
+		Certificate: []byte{01, 02, 03, 04, 05},
+	}
+	return &ca, okResponse, nil
 }
 
 // Create ...

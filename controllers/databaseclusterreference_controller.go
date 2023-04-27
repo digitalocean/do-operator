@@ -113,7 +113,13 @@ func (r *DatabaseClusterReferenceReconciler) Reconcile(ctx context.Context, req 
 	ref.Status.Status = db.Status
 	ref.Status.CreatedAt = metav1.NewTime(db.CreatedAt)
 
-	err = r.ensureOwnedObjects(ctx, &ref, db)
+	ca, _, err := r.GodoClient.Databases.GetCA(ctx, db.ID)
+	if err != nil {
+		ll.Error(err, "unable to get existing database CA")
+		return ctrl.Result{}, fmt.Errorf("getting existing database CA: %v", err)
+	}
+
+	err = r.ensureOwnedObjects(ctx, &ref, db, ca)
 	if err != nil {
 		ll.Error(err, "unable to ensure DB-related objects")
 		return ctrl.Result{}, fmt.Errorf("ensuring DB-related objects: %v", err)
@@ -122,7 +128,7 @@ func (r *DatabaseClusterReferenceReconciler) Reconcile(ctx context.Context, req 
 	return ctrl.Result{RequeueAfter: clusterReferenceRefreshTime}, nil
 }
 
-func (r *DatabaseClusterReferenceReconciler) ensureOwnedObjects(ctx context.Context, cluster *v1alpha1.DatabaseClusterReference, db *godo.Database) error {
+func (r *DatabaseClusterReferenceReconciler) ensureOwnedObjects(ctx context.Context, cluster *v1alpha1.DatabaseClusterReference, db *godo.Database, ca *godo.DatabaseCA) error {
 	objs := []client.Object{}
 	if db.Connection != nil {
 		objs = append(objs, connectionConfigMapForDB("-connection", cluster, db.Connection))
@@ -135,7 +141,7 @@ func (r *DatabaseClusterReferenceReconciler) ensureOwnedObjects(ctx context.Cont
 		// MongoDB doesn't return the default user password with the DB except
 		// on creation. Don't update the credentials if the password is empty,
 		// but create the secret if we have the password.
-		objs = append(objs, credentialsSecretForDefaultDBUser(cluster, db))
+		objs = append(objs, credentialsSecretForDefaultDBUser(cluster, db, ca))
 	}
 
 	for _, obj := range objs {
