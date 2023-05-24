@@ -37,6 +37,21 @@ type FakeDatabasesService struct {
 	users     map[string][]godo.DatabaseUser
 }
 
+// UpdatePool ...
+func (f *FakeDatabasesService) UpdatePool(_ context.Context, _ string, _ string, _ *godo.DatabaseUpdatePoolRequest) (*godo.Response, error) {
+	panic("implement me")
+}
+
+// PromoteReplicaToPrimary ...
+func (f *FakeDatabasesService) PromoteReplicaToPrimary(_ context.Context, _ string, _ string) (*godo.Response, error) {
+	panic("implement me")
+}
+
+// UpgradeMajorVersion ...
+func (f *FakeDatabasesService) UpgradeMajorVersion(_ context.Context, _ string, _ *godo.UpgradeVersionRequest) (*godo.Response, error) {
+	panic("implement me")
+}
+
 // List ...
 func (f *FakeDatabasesService) List(_ context.Context, _ *godo.ListOptions) ([]godo.Database, *godo.Response, error) {
 	panic("not implemented")

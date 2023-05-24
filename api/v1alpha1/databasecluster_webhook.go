@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"strconv"
 
 	"github.com/digitalocean/godo"
@@ -47,14 +48,14 @@ func (r *DatabaseCluster) SetupWebhookWithManager(mgr ctrl.Manager, godoClient *
 var _ webhook.Validator = &DatabaseCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseCluster) ValidateCreate() error {
+func (r *DatabaseCluster) ValidateCreate() (warnings admission.Warnings, err error) {
 	databaseclusterlog.Info("validate create", "name", r.Name)
 	ctx := context.TODO()
 
 	godoReq := r.Spec.ToGodoValidateCreateRequest()
 	req, err := godoClient.NewRequest(ctx, http.MethodPost, "/v2/databases", godoReq)
 	if err != nil {
-		return fmt.Errorf("creating http request: %v", err)
+		return warnings, fmt.Errorf("creating http request: %v", err)
 	}
 	_, err = godoClient.Do(ctx, req, nil)
 	if err != nil {
@@ -72,95 +73,95 @@ func (r *DatabaseCluster) ValidateCreate() error {
 			opts, _, err := godoClient.Databases.ListOptions(ctx)
 			if err != nil {
 				databaseclusterlog.Error(err, "getting database options from the DigitalOcean api")
-				return invalidSpecErr
+				return warnings, invalidSpecErr
 			}
 			engineOpts, haveOpts := engineOptsFromOptions(opts, r.Spec.Engine)
 
 			switch godoErr.Message {
 			case "invalid cluster name":
-				return field.Invalid(specField.Child("name"), r.Spec.Name, godoErr.Message)
+				return warnings, field.Invalid(specField.Child("name"), r.Spec.Name, godoErr.Message)
 			case "invalid node count":
 				var validNumNodes []string
 				if !haveOpts {
-					return field.Invalid(specField.Child("numNodes"), r.Spec.NumNodes, godoErr.Message)
+					return warnings, field.Invalid(specField.Child("numNodes"), r.Spec.NumNodes, godoErr.Message)
 				}
 				for _, layout := range engineOpts.Layouts {
 					validNumNodes = append(validNumNodes, strconv.Itoa(layout.NodeNum))
 				}
-				return field.NotSupported(specField.Child("numNodes"), r.Spec.NumNodes, validNumNodes)
+				return warnings, field.NotSupported(specField.Child("numNodes"), r.Spec.NumNodes, validNumNodes)
 			case "invalid engine":
 				// The options API doesn't return us the list of engines in a
 				// friendly format, so we just hardcode them.
-				return field.NotSupported(specField.Child("engine"), r.Spec.Engine, []string{"mysql", "pg", "redis", "mongodb"})
+				return warnings, field.NotSupported(specField.Child("engine"), r.Spec.Engine, []string{"mysql", "pg", "redis", "mongodb"})
 			case "invalid size":
 				if !haveOpts {
-					return field.Invalid(specField.Child("size"), r.Spec.Size, godoErr.Message)
+					return warnings, field.Invalid(specField.Child("size"), r.Spec.Size, godoErr.Message)
 				}
 				for _, layout := range engineOpts.Layouts {
 					if layout.NodeNum == int(r.Spec.NumNodes) {
-						return field.NotSupported(specField.Child("size"), r.Spec.Size, layout.Sizes)
+						return warnings, field.NotSupported(specField.Child("size"), r.Spec.Size, layout.Sizes)
 					}
 				}
-				return field.Invalid(specField.Child("size"), r.Spec.Size, godoErr.Message)
+				return warnings, field.Invalid(specField.Child("size"), r.Spec.Size, godoErr.Message)
 			case "invalid region":
 				if !haveOpts {
-					return field.Invalid(specField.Child("region"), r.Spec.Region, godoErr.Message)
+					return warnings, field.Invalid(specField.Child("region"), r.Spec.Region, godoErr.Message)
 				}
-				return field.NotSupported(specField.Child("region"), r.Spec.Region, engineOpts.Regions)
+				return warnings, field.NotSupported(specField.Child("region"), r.Spec.Region, engineOpts.Regions)
 			case "invalid cluster engine version":
 				if !haveOpts {
-					return field.Invalid(specField.Child("version"), r.Spec.Version, godoErr.Message)
+					return warnings, field.Invalid(specField.Child("version"), r.Spec.Version, godoErr.Message)
 				}
-				return field.NotSupported(specField.Child("version"), r.Spec.Version, engineOpts.Versions)
+				return warnings, field.NotSupported(specField.Child("version"), r.Spec.Version, engineOpts.Versions)
 			}
 
-			return invalidSpecErr
+			return warnings, invalidSpecErr
 		}
 
-		return field.Invalid(specField, r.Spec, err.Error())
+		return warnings, field.Invalid(specField, r.Spec, err.Error())
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseCluster) ValidateUpdate(old runtime.Object) error {
+func (r *DatabaseCluster) ValidateUpdate(old runtime.Object) (warnings admission.Warnings, err error) {
 	databaseclusterlog.Info("validate update", "name", r.Name)
 	ctx := context.TODO()
 
 	oldCluster, ok := old.(*DatabaseCluster)
 	if !ok {
-		return fmt.Errorf("old is unexpected type %T", old)
+		return warnings, fmt.Errorf("old is unexpected type %T", old)
 	}
 
 	enginePath := field.NewPath("spec").Child("engine")
 	if oldCluster.Spec.Engine != r.Spec.Engine {
-		return field.Forbidden(enginePath, "engine is immutable")
+		return warnings, field.Forbidden(enginePath, "engine is immutable")
 	}
 	namePath := field.NewPath("spec").Child("name")
 	if oldCluster.Spec.Name != r.Spec.Name {
-		return field.Forbidden(namePath, "name is immutable")
+		return warnings, field.Forbidden(namePath, "name is immutable")
 	}
 	// TODO(awg) Remove once we support upgrades in the controller.
 	versionPath := field.NewPath("spec").Child("version")
 	if oldCluster.Spec.Version != r.Spec.Version {
-		return field.Forbidden(versionPath, "database upgrades are not yet supported in the do-operator")
+		return warnings, field.Forbidden(versionPath, "database upgrades are not yet supported in the do-operator")
 	}
 	// TODO(awg) Remove once we support migrations in the controller.
 	regionPath := field.NewPath("spec").Child("region")
 	if oldCluster.Spec.Region != r.Spec.Region {
-		return field.Forbidden(regionPath, "database region migrations are not yet supported in the do-operator")
+		return warnings, field.Forbidden(regionPath, "database region migrations are not yet supported in the do-operator")
 	}
 
 	opts, _, err := godoClient.Databases.ListOptions(ctx)
 	if err != nil {
-		return fmt.Errorf("getting database options from the DigitalOcean api: %v", err)
+		return warnings, fmt.Errorf("getting database options from the DigitalOcean api: %v", err)
 	}
 	engineOpts, ok := engineOptsFromOptions(opts, r.Spec.Engine)
 	if !ok {
 		// We *should* get options back for all supported engines, but if the
 		// API is missing one we shouldn't block the user from updating.
-		return nil
+		return warnings, nil
 	}
 
 	var (
@@ -179,7 +180,7 @@ func (r *DatabaseCluster) ValidateUpdate(old runtime.Object) error {
 	}
 	if !numNodesValid {
 		numNodesPath := field.NewPath("spec").Child("numNodes")
-		return field.NotSupported(numNodesPath, r.Spec.NumNodes, validNumNodes)
+		return warnings, field.NotSupported(numNodesPath, r.Spec.NumNodes, validNumNodes)
 	}
 	for _, size := range selectedLayout.Sizes {
 		if size == r.Spec.Size {
@@ -189,14 +190,14 @@ func (r *DatabaseCluster) ValidateUpdate(old runtime.Object) error {
 	}
 	if !sizeValid {
 		sizePath := field.NewPath("spec").Child("size")
-		return field.NotSupported(sizePath, r.Spec.Size, selectedLayout.Sizes)
+		return warnings, field.NotSupported(sizePath, r.Spec.Size, selectedLayout.Sizes)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseCluster) ValidateDelete() error {
+func (r *DatabaseCluster) ValidateDelete() (warnings admission.Warnings, err error) {
 	databaseclusterlog.Info("validate delete", "name", r.Name)
-	return nil
+	return warnings, nil
 }

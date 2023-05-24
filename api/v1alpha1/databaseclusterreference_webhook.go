@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/digitalocean/godo"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,7 +46,7 @@ func (r *DatabaseClusterReference) SetupWebhookWithManager(mgr ctrl.Manager, god
 var _ webhook.Validator = &DatabaseClusterReference{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseClusterReference) ValidateCreate() error {
+func (r *DatabaseClusterReference) ValidateCreate() (warnings admission.Warnings, err error) {
 	databaseclusterreferencelog.Info("validate create", "name", r.Name)
 
 	dbUUID := r.Spec.UUID
@@ -53,32 +54,32 @@ func (r *DatabaseClusterReference) ValidateCreate() error {
 	_, resp, err := godoClient.Databases.Get(context.TODO(), dbUUID)
 	if err != nil {
 		if resp.StatusCode == http.StatusNotFound {
-			return field.Invalid(uuidPath, dbUUID, "database does not exist; you must create it before referencing it")
+			return warnings, field.Invalid(uuidPath, dbUUID, "database does not exist; you must create it before referencing it")
 		}
-		return fmt.Errorf("failed to look up database: %v", err)
+		return warnings, fmt.Errorf("failed to look up database: %v", err)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseClusterReference) ValidateUpdate(old runtime.Object) error {
+func (r *DatabaseClusterReference) ValidateUpdate(old runtime.Object) (warnings admission.Warnings, err error) {
 	databaseclusterreferencelog.Info("validate update", "name", r.Name)
 
 	oldDBRef, ok := old.(*DatabaseClusterReference)
 	if !ok {
-		return fmt.Errorf("old is unexpected type %T", old)
+		return warnings, fmt.Errorf("old is unexpected type %T", old)
 	}
 	uuidPath := field.NewPath("spec").Child("uuid")
 	if r.Spec.UUID != oldDBRef.Spec.UUID {
-		return field.Forbidden(uuidPath, "database UUID is immutable")
+		return warnings, field.Forbidden(uuidPath, "database UUID is immutable")
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseClusterReference) ValidateDelete() error {
+func (r *DatabaseClusterReference) ValidateDelete() (warnings admission.Warnings, err error) {
 	databaseclusterreferencelog.Info("validate delete", "name", r.Name)
-	return nil
+	return warnings, nil
 }

@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"strings"
 
 	"github.com/digitalocean/godo"
@@ -52,7 +53,7 @@ func (r *DatabaseUserReference) SetupWebhookWithManager(mgr ctrl.Manager, godoCl
 var _ webhook.Validator = &DatabaseUserReference{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseUserReference) ValidateCreate() error {
+func (r *DatabaseUserReference) ValidateCreate() (warnings admission.Warnings, err error) {
 	databaseuserreferencelog.Info("validate create", "name", r.Name)
 	ctx := context.TODO()
 
@@ -60,7 +61,7 @@ func (r *DatabaseUserReference) ValidateCreate() error {
 
 	clusterAPIGroup := pointer.StringDeref(r.Spec.Cluster.APIGroup, "")
 	if clusterAPIGroup != GroupVersion.Group {
-		return field.Invalid(clusterPath.Child("apiGroup"), clusterAPIGroup, "apiGroup must be "+GroupVersion.Group)
+		return warnings, field.Invalid(clusterPath.Child("apiGroup"), clusterAPIGroup, "apiGroup must be "+GroupVersion.Group)
 	}
 
 	var (
@@ -78,9 +79,9 @@ func (r *DatabaseUserReference) ValidateCreate() error {
 		var cluster DatabaseCluster
 		if err := webhookClient.Get(ctx, clusterNN, &cluster); err != nil {
 			if kerrors.IsNotFound(err) {
-				return field.NotFound(clusterPath, clusterNN)
+				return warnings, field.NotFound(clusterPath, clusterNN)
 			}
-			return fmt.Errorf("failed to fetch DatabaseCluster %s: %s", clusterNN, err)
+			return warnings, fmt.Errorf("failed to fetch DatabaseCluster %s: %s", clusterNN, err)
 		}
 		clusterUUID = cluster.Status.UUID
 		engine = cluster.Spec.Engine
@@ -88,14 +89,14 @@ func (r *DatabaseUserReference) ValidateCreate() error {
 		var clusterRef DatabaseClusterReference
 		if err := webhookClient.Get(ctx, clusterNN, &clusterRef); err != nil {
 			if kerrors.IsNotFound(err) {
-				return field.NotFound(clusterPath, clusterNN)
+				return warnings, field.NotFound(clusterPath, clusterNN)
 			}
-			return fmt.Errorf("failed to fetch DatabaseClusterReference %s: %s", clusterNN, err)
+			return warnings, fmt.Errorf("failed to fetch DatabaseClusterReference %s: %s", clusterNN, err)
 		}
 		clusterUUID = clusterRef.Spec.UUID
 		engine = clusterRef.Status.Engine
 	default:
-		return field.TypeInvalid(
+		return warnings, field.TypeInvalid(
 			clusterPath.Child("kind"),
 			clusterKind,
 			"kind must be DatabaseCluster or DatabaseClusterReference",
@@ -106,51 +107,51 @@ func (r *DatabaseUserReference) ValidateCreate() error {
 	case "":
 		// This is most likely for DatabaseClusterReferences that haven't been
 		// reconciled yet.
-		return errors.New("could not determine database engine")
+		return warnings, errors.New("could not determine database engine")
 	case "mongodb":
-		return field.Invalid(clusterPath, r.Spec.Cluster, "user references are not supported for MongoDB databases")
+		return warnings, field.Invalid(clusterPath, r.Spec.Cluster, "user references are not supported for MongoDB databases")
 	case "redis":
-		return field.Invalid(clusterPath, r.Spec.Cluster, "user management is not supported for Redis databases")
+		return warnings, field.Invalid(clusterPath, r.Spec.Cluster, "user management is not supported for Redis databases")
 	}
 
 	_, resp, err := godoClient.Databases.GetUser(ctx, clusterUUID, r.Spec.Username)
 	if err != nil {
 		if resp.StatusCode == http.StatusNotFound {
-			return field.Invalid(
+			return warnings, field.Invalid(
 				field.NewPath("spec").Child("username"),
 				r.Spec.Username,
 				"user does not exist; you must create it before referencing it",
 			)
 		}
-		return fmt.Errorf("failed to look up user: %v", err)
+		return warnings, fmt.Errorf("failed to look up user: %v", err)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseUserReference) ValidateUpdate(old runtime.Object) error {
+func (r *DatabaseUserReference) ValidateUpdate(old runtime.Object) (warnings admission.Warnings, err error) {
 	databaseuserreferencelog.Info("validate update", "name", r.Name)
 
 	oldRef, ok := old.(*DatabaseUserReference)
 	if !ok {
-		return fmt.Errorf("old is unexpected type %T", old)
+		return warnings, fmt.Errorf("old is unexpected type %T", old)
 	}
 	usernamePath := field.NewPath("spec").Child("username")
 	if r.Spec.Username != oldRef.Spec.Username {
-		return field.Forbidden(usernamePath, "username is immutable")
+		return warnings, field.Forbidden(usernamePath, "username is immutable")
 	}
 	clusterPath := field.NewPath("spec").Child("cluster")
 	if !cmp.Equal(r.Spec.Cluster, oldRef.Spec.Cluster) {
-		return field.Forbidden(clusterPath, "cluster is immutable")
+		return warnings, field.Forbidden(clusterPath, "cluster is immutable")
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseUserReference) ValidateDelete() error {
+func (r *DatabaseUserReference) ValidateDelete() (warnings admission.Warnings, err error) {
 	databaseuserreferencelog.Info("validate delete", "name", r.Name)
 
-	return nil
+	return warnings, nil
 }
