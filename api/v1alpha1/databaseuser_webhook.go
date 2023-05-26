@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"strings"
 
 	"github.com/digitalocean/godo"
@@ -51,7 +52,7 @@ func (r *DatabaseUser) SetupWebhookWithManager(mgr ctrl.Manager, godoClient *god
 var _ webhook.Validator = &DatabaseUser{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseUser) ValidateCreate() error {
+func (r *DatabaseUser) ValidateCreate() (warnings admission.Warnings, err error) {
 	databaseuserlog.Info("validate create", "name", r.Name)
 	ctx := context.TODO()
 
@@ -59,7 +60,7 @@ func (r *DatabaseUser) ValidateCreate() error {
 
 	clusterAPIGroup := pointer.StringDeref(r.Spec.Cluster.APIGroup, "")
 	if clusterAPIGroup != GroupVersion.Group {
-		return field.Invalid(clusterPath.Child("apiGroup"), clusterAPIGroup, "apiGroup must be "+GroupVersion.Group)
+		return warnings, field.Invalid(clusterPath.Child("apiGroup"), clusterAPIGroup, "apiGroup must be "+GroupVersion.Group)
 	}
 
 	var (
@@ -76,22 +77,22 @@ func (r *DatabaseUser) ValidateCreate() error {
 		var cluster DatabaseCluster
 		if err := webhookClient.Get(ctx, clusterNN, &cluster); err != nil {
 			if kerrors.IsNotFound(err) {
-				return field.NotFound(clusterPath, clusterNN)
+				return warnings, field.NotFound(clusterPath, clusterNN)
 			}
-			return fmt.Errorf("failed to fetch DatabaseCluster %s: %s", clusterNN, err)
+			return warnings, fmt.Errorf("failed to fetch DatabaseCluster %s: %s", clusterNN, err)
 		}
 		clusterUUID = cluster.Status.UUID
 	case strings.ToLower(DatabaseClusterReferenceKind):
 		var clusterRef DatabaseClusterReference
 		if err := webhookClient.Get(ctx, clusterNN, &clusterRef); err != nil {
 			if kerrors.IsNotFound(err) {
-				return field.NotFound(clusterPath, clusterNN)
+				return warnings, field.NotFound(clusterPath, clusterNN)
 			}
-			return fmt.Errorf("failed to fetch DatabaseClusterReference %s: %s", clusterNN, err)
+			return warnings, fmt.Errorf("failed to fetch DatabaseClusterReference %s: %s", clusterNN, err)
 		}
 		clusterUUID = clusterRef.Spec.UUID
 	default:
-		return field.TypeInvalid(
+		return warnings, field.TypeInvalid(
 			clusterPath.Child("kind"),
 			clusterKind,
 			"kind must be DatabaseCluster or DatabaseClusterReference",
@@ -100,37 +101,37 @@ func (r *DatabaseUser) ValidateCreate() error {
 
 	_, resp, err := godoClient.Databases.GetUser(ctx, clusterUUID, r.Spec.Username)
 	if err != nil && resp.StatusCode != http.StatusNotFound {
-		return fmt.Errorf("failed to look up database: %v", err)
+		return warnings, fmt.Errorf("failed to look up database: %v", err)
 	}
 	if err == nil {
-		return field.Duplicate(field.NewPath("spec").Child("username"), r.Spec.Username)
+		return warnings, field.Duplicate(field.NewPath("spec").Child("username"), r.Spec.Username)
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseUser) ValidateUpdate(old runtime.Object) error {
+func (r *DatabaseUser) ValidateUpdate(old runtime.Object) (warnings admission.Warnings, err error) {
 	databaseuserlog.Info("validate update", "name", r.Name)
 
 	oldUser, ok := old.(*DatabaseUser)
 	if !ok {
-		return fmt.Errorf("old is unexpected type %T", old)
+		return warnings, fmt.Errorf("old is unexpected type %T", old)
 	}
 	usernamePath := field.NewPath("spec").Child("username")
 	if r.Spec.Username != oldUser.Spec.Username {
-		return field.Forbidden(usernamePath, "username is immutable")
+		return warnings, field.Forbidden(usernamePath, "username is immutable")
 	}
 	clusterPath := field.NewPath("spec").Child("cluster")
 	if !cmp.Equal(r.Spec.Cluster, oldUser.Spec.Cluster) {
-		return field.Forbidden(clusterPath, "cluster is immutable")
+		return warnings, field.Forbidden(clusterPath, "cluster is immutable")
 	}
 
-	return nil
+	return warnings, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DatabaseUser) ValidateDelete() error {
+func (r *DatabaseUser) ValidateDelete() (warnings admission.Warnings, err error) {
 	databaseuserlog.Info("validate delete", "name", r.Name)
-	return nil
+	return warnings, nil
 }

@@ -13,3 +13,9 @@ secretGenerator:
 - envs:
   - do-api-token.env
   name: do-api-token
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: controller
+  newName: docker.io/digitalocean/do-operator
+  newTag: v0.1.7
