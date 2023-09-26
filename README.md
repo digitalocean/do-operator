@@ -112,6 +112,26 @@ make uninstall
 4. `go build .`
 5. Now move the generated `kustomize` binary into the `bin` directory in this project (create it if it doesn't exist `mkdir bin`): `mv kustomize <project path>/bin/kustomize`
 
+### Update Go and dependencies
+1. Update Go version in
+   1. [go.mod](./go.mod)
+   2. [.github/workflows/release.yml](./.github/workflows/release.yml)
+   3. [.github/workflows/test.yml](./.github/workflows/test.yml)
+   4. [Dockerfile](./Dockerfile)
+2. Update Go dependencies
+   ```shell
+   go get -u ./...
+   go mod tidy
+   go mod vendor
+   ```
+3. Run `make test`
+4. Create and merge PR
+
+### Release
+1. Create release manifest files by running `IMG_TAG=vX.Y.Z make release-manifests`
+2. Create and merge PR
+3. [Trigger the `release` GitHub action workflow](https://github.com/digitalocean/do-operator/actions/workflows/release.yml)
+
 ## Contributing
 
 At DigitalOcean we value and love our community!
