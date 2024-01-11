@@ -131,6 +131,9 @@ make uninstall
 1. Create release manifest files by running `IMG_TAG=vX.Y.Z make release-manifests`
 2. Create and merge PR
 3. [Trigger the `release` GitHub action workflow](https://github.com/digitalocean/do-operator/actions/workflows/release.yml)
+    - Draft a new release [here](https://github.com/digitalocean/do-operator/releases) for the new version
+    - Creating a new release will trigger the [release](https://github.com/digitalocean/do-operator/actions/workflows/release.yml) Github Action
+    - Follow the [release](https://github.com/digitalocean/do-operator/actions/workflows/release.yml) Github Action until successful completion.
 
 ## Contributing
 
