@@ -214,6 +214,11 @@ func (f *FakeDatabasesService) CreateUser(_ context.Context, dbUUID string, req 
 	return nil, notFoundResponse, errors.New("not found")
 }
 
+// UpdateUser ...
+func (f *FakeDatabasesService) UpdateUser(context.Context, string, string, *godo.DatabaseUpdateUserRequest) (*godo.DatabaseUser, *godo.Response, error) {
+	panic("not implemented")
+}
+
 // DeleteUser ...
 func (f *FakeDatabasesService) DeleteUser(_ context.Context, dbUUID string, username string) (*godo.Response, error) {
 	f.mu.Lock()
@@ -362,4 +367,29 @@ func (f *FakeDatabasesService) UpdateMySQLConfig(_ context.Context, _ string, _ 
 // ListOptions ...
 func (f *FakeDatabasesService) ListOptions(todo context.Context) (*godo.DatabaseOptions, *godo.Response, error) {
 	return f.Options, okResponse, nil
+}
+
+// ListTopic ...
+func (f *FakeDatabasesService) ListTopics(context.Context, string, *godo.ListOptions) ([]godo.DatabaseTopic, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// CreateTopic ...
+func (f *FakeDatabasesService) CreateTopic(context.Context, string, *godo.DatabaseCreateTopicRequest) (*godo.DatabaseTopic, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// GetTopic ...
+func (f *FakeDatabasesService) GetTopic(context.Context, string, string) (*godo.DatabaseTopic, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// DeleteTopic ...
+func (f *FakeDatabasesService) DeleteTopic(context.Context, string, string) (*godo.Response, error) {
+	panic("not implemented")
+}
+
+// UpdateTopic ...
+func (f *FakeDatabasesService) UpdateTopic(context.Context, string, string, *godo.DatabaseUpdateTopicRequest) (*godo.Response, error) {
+	panic("not implemented")
 }
