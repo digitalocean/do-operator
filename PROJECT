@@ -52,4 +52,16 @@ resources:
   webhooks:
     validation: true
     webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: digitalocean.com
+  group: databases
+  kind: Database
+  path: github.com/digitalocean/do-operator/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    conversion: true
+    webhookVersion: v1
 version: "3"
