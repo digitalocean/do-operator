@@ -2,10 +2,11 @@ package controllers
 
 import (
 	"fmt"
+	"net/url"
+
 	"github.com/digitalocean/godo"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/url"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
