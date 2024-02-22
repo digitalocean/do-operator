@@ -167,6 +167,11 @@ func (r *DatabaseUserReconciler) reconcileDBUser(ctx context.Context, clusterUUI
 		"user_name", user.Spec.Username,
 	)
 
+	db, resp, err := r.GodoClient.Databases.Get(ctx, clusterUUID)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("checking for existing DB Cluster: %v", err)
+	}
+
 	// The validating webhook checks that the user doesn't already exist, so we
 	// assume that if we find it to exist now we created it. If the user was
 	// created between validation passing and getting here, we could assume
@@ -193,7 +198,7 @@ func (r *DatabaseUserReconciler) reconcileDBUser(ctx context.Context, clusterUUI
 	controllerutil.AddFinalizer(user, finalizerName)
 	user.Status.Role = dbUser.Role
 
-	err = r.ensureOwnedObjects(ctx, user, dbUser)
+	err = r.ensureOwnedObjects(ctx, db, user, dbUser)
 	if err != nil {
 		ll.Error(err, "unable to ensure user-related objects")
 		return ctrl.Result{}, fmt.Errorf("ensuring user-related objects: %v", err)
@@ -202,7 +207,7 @@ func (r *DatabaseUserReconciler) reconcileDBUser(ctx context.Context, clusterUUI
 	return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil
 }
 
-func (r *DatabaseUserReconciler) ensureOwnedObjects(ctx context.Context, user *v1alpha1.DatabaseUser, dbUser *godo.DatabaseUser) error {
+func (r *DatabaseUserReconciler) ensureOwnedObjects(ctx context.Context, db *godo.Database, user *v1alpha1.DatabaseUser, dbUser *godo.DatabaseUser) error {
 	// For some database engines the password is not returned when fetching a
 	// user, only on initial creation. Avoid creating or updating the user
 	// credentials secret if the password is empty, so we don't clear the
@@ -211,7 +216,10 @@ func (r *DatabaseUserReconciler) ensureOwnedObjects(ctx context.Context, user *v
 		return nil
 	}
 
-	obj := credentialsSecretForDBUser(user, dbUser)
+	obj, err := credentialsSecretForDBUser(db, user, dbUser)
+	if err != nil {
+		return fmt.Errorf("creating secrett: %s", err)
+	}
 	controllerutil.SetControllerReference(user, obj, r.Scheme)
 	if err := r.Patch(ctx, obj, client.Apply, client.ForceOwnership, client.FieldOwner("do-operator")); err != nil {
 		return fmt.Errorf("applying object %s: %s", client.ObjectKeyFromObject(obj), err)
