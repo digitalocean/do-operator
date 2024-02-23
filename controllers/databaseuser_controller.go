@@ -22,10 +22,12 @@ import (
 	"net/http"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilerror "k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -42,12 +44,14 @@ type DatabaseUserReconciler struct {
 	client.Client
 	Scheme     *runtime.Scheme
 	GodoClient *godo.Client
+	Recorder   record.EventRecorder
 }
 
 //+kubebuilder:rbac:groups=databases.digitalocean.com,resources=databaseusers,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=databases.digitalocean.com,resources=databaseusers/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=databases.digitalocean.com,resources=databaseusers/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=create;patch
+//+kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -94,8 +98,10 @@ func (r *DatabaseUserReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 		if len(errs) == 0 {
 			if updated {
+				r.Recorder.Event(&user, corev1.EventTypeNormal, "Updated", "database user update succeeded")
 				ll.Info("DatabaseUser update succeeded")
 			} else {
+				r.Recorder.Event(&user, corev1.EventTypeNormal, "NoUpdate", "database user update unnecessary")
 				ll.Info("no DatabaseUser update necessary")
 			}
 		}
@@ -149,6 +155,7 @@ func (r *DatabaseUserReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		// quick retry in those cases so we don't exponentially back off.
 		if clusterStatus == "" || clusterStatus == "creating" {
 			ll.Info("database is still creating; waiting to create user")
+			r.Recorder.Event(&user, corev1.EventTypeNormal, "WaitingForDBUser", "database is still creating, waiting to create user")
 			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 
@@ -186,6 +193,7 @@ func (r *DatabaseUserReconciler) reconcileDBUser(ctx context.Context, clusterUUI
 		dbUser, _, err = r.GodoClient.Databases.CreateUser(ctx, clusterUUID, createReq)
 		if err != nil {
 			ll.Error(err, "unable to create user")
+			r.Recorder.Eventf(user, corev1.EventTypeWarning, "FailedCreate", "failed to create user: %v", err)
 			return ctrl.Result{}, fmt.Errorf("creating DB user: %v", err)
 		}
 	}
@@ -196,6 +204,7 @@ func (r *DatabaseUserReconciler) reconcileDBUser(ctx context.Context, clusterUUI
 	err = r.ensureOwnedObjects(ctx, user, dbUser)
 	if err != nil {
 		ll.Error(err, "unable to ensure user-related objects")
+		r.Recorder.Eventf(user, corev1.EventTypeWarning, "FailedCreate", "failed to ensure user related objects: %v", err)
 		return ctrl.Result{}, fmt.Errorf("ensuring user-related objects: %v", err)
 	}
 
@@ -230,6 +239,7 @@ func (r *DatabaseUserReconciler) reconcileDeletedDBUser(ctx context.Context, clu
 	_, err := r.GodoClient.Databases.DeleteUser(ctx, clusterUUID, user.Spec.Username)
 	if err != nil {
 		ll.Error(err, "unable to delete user")
+		r.Recorder.Eventf(user, corev1.EventTypeWarning, "FailedDelete", "failed to delete user: %v", err)
 		return ctrl.Result{}, fmt.Errorf("deleting user: %v", err)
 	}
 	controllerutil.RemoveFinalizer(user, finalizerName)

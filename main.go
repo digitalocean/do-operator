@@ -142,6 +142,7 @@ func main() {
 		Client:     mgr.GetClient(),
 		Scheme:     mgr.GetScheme(),
 		GodoClient: godoClient,
+		Recorder:   mgr.GetEventRecorderFor("db-user-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DatabaseUser")
 		os.Exit(1)
