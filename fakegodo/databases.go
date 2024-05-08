@@ -393,3 +393,8 @@ func (f *FakeDatabasesService) DeleteTopic(context.Context, string, string) (*go
 func (f *FakeDatabasesService) UpdateTopic(context.Context, string, string, *godo.DatabaseUpdateTopicRequest) (*godo.Response, error) {
 	panic("not implemented")
 }
+
+// GetMetricsCredentials ...
+func (f *FakeDatabasesService) GetMetricsCredentials(ctx context.Context) (*godo.DatabaseMetricsCredentials, *godo.Response, error) {
+	panic("not implemented")
+}
