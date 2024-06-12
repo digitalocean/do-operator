@@ -7,7 +7,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func credentialsSecretForDefaultDBUser(owner client.Object, db *godo.Database) *corev1.Secret {
+func credentialsSecretForDefaultDBUser(owner client.Object, db *godo.Database, ca *godo.DatabaseCA) *corev1.Secret {
 	secret := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -27,6 +27,10 @@ func credentialsSecretForDefaultDBUser(owner client.Object, db *godo.Database) *
 	// We assume connection is non-nil, but private connection could be nil.
 	if db.PrivateConnection != nil {
 		secret.StringData["private_uri"] = db.PrivateConnection.URI
+	}
+
+	if ca != nil && len(ca.Certificate) > 0 {
+		secret.StringData["ca.crt"] = string(ca.Certificate)
 	}
 
 	return secret

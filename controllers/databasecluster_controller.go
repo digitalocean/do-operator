@@ -135,7 +135,13 @@ func (r *DatabaseClusterReconciler) reconcileNewDB(ctx context.Context, cluster 
 	cluster.Status.CreatedAt = metav1.NewTime(db.CreatedAt)
 	cluster.Status.Status = db.Status
 
-	err = r.ensureOwnedObjects(ctx, cluster, db)
+	ca, _, err := r.GodoClient.Databases.GetCA(ctx, db.ID)
+	if err != nil {
+		ll.Error(err, "unable to get database CA")
+		return ctrl.Result{}, fmt.Errorf("getting database CA: %v", err)
+	}
+
+	err = r.ensureOwnedObjects(ctx, cluster, db, ca)
 	if err != nil {
 		ll.Error(err, "unable to ensure DB-related objects")
 		return ctrl.Result{}, fmt.Errorf("ensuring DB-related objects: %v", err)
@@ -152,6 +158,12 @@ func (r *DatabaseClusterReconciler) reconcileExistingDB(ctx context.Context, clu
 	if err != nil {
 		ll.Error(err, "unable to fetch existing DB")
 		return ctrl.Result{}, fmt.Errorf("getting existing DB cluster: %v", err)
+	}
+
+	ca, _, err := r.GodoClient.Databases.GetCA(ctx, db.ID)
+	if err != nil {
+		ll.Error(err, "unable to get existing database database CA")
+		return ctrl.Result{}, fmt.Errorf("getting existing database CA: %v", err)
 	}
 
 	// Resize if either of the size parameters in the spec has changed.
@@ -189,7 +201,7 @@ func (r *DatabaseClusterReconciler) reconcileExistingDB(ctx context.Context, clu
 		}
 	}
 
-	err = r.ensureOwnedObjects(ctx, cluster, db)
+	err = r.ensureOwnedObjects(ctx, cluster, db, ca)
 	if err != nil {
 		ll.Error(err, "unable to ensure DB-related objects")
 		return ctrl.Result{}, fmt.Errorf("ensuring DB-related objects: %v", err)
@@ -218,7 +230,7 @@ func (r *DatabaseClusterReconciler) reconcileDeletedDB(ctx context.Context, clus
 	return ctrl.Result{}, nil
 }
 
-func (r *DatabaseClusterReconciler) ensureOwnedObjects(ctx context.Context, cluster *v1alpha1.DatabaseCluster, db *godo.Database) error {
+func (r *DatabaseClusterReconciler) ensureOwnedObjects(ctx context.Context, cluster *v1alpha1.DatabaseCluster, db *godo.Database, ca *godo.DatabaseCA) error {
 	objs := []client.Object{}
 	if db.Connection != nil {
 		objs = append(objs, connectionConfigMapForDB("-connection", cluster, db.Connection))
@@ -231,7 +243,7 @@ func (r *DatabaseClusterReconciler) ensureOwnedObjects(ctx context.Context, clus
 		// MongoDB doesn't return the default user password with the DB except
 		// on creation. Don't update the credentials if the password is empty,
 		// but create the secret if we have the password.
-		objs = append(objs, credentialsSecretForDefaultDBUser(cluster, db))
+		objs = append(objs, credentialsSecretForDefaultDBUser(cluster, db, ca))
 	}
 
 	for _, obj := range objs {
