@@ -12,6 +12,8 @@ Currently it supports [DigitalOcean Managed Databases](https://www.digitalocean.
 * The CRDs in this project are currently `v1alpha1` and may change in the future.
 * DigitalOcean supports this project on a best-effort basis via GitHub issues.
 
+**If you have already enabled `do-operator` by clicking `Add database operator` button from cloud control panel UI while creating your `DOKS` cluster, please `DO NOT` install it again.**
+
 ## Quick Start
 
 To install the operator on a Kubernetes cluster, you can follow these steps:
