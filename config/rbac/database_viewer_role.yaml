@@ -1,0 +1,20 @@
+# permissions for end s to view databases.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: database-viewer-role
+rules:
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databases
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - databases.digitalocean.com
+  resources:
+  - databases/status
+  verbs:
+  - get
