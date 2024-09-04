@@ -18,4 +18,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: docker.io/digitalocean/do-operator
-  newTag: v0.1.10
+  newTag: v0.1.11
