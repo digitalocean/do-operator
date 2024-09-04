@@ -1317,6 +1317,14 @@ func (a *AppLogDestinationSpec) GetName() string {
 	return a.Name
 }
 
+// GetOpenSearch returns the OpenSearch field.
+func (a *AppLogDestinationSpec) GetOpenSearch() *AppLogDestinationSpecOpenSearch {
+	if a == nil {
+		return nil
+	}
+	return a.OpenSearch
+}
+
 // GetPapertrail returns the Papertrail field.
 func (a *AppLogDestinationSpec) GetPapertrail() *AppLogDestinationSpecPapertrail {
 	if a == nil {
@@ -1371,6 +1379,38 @@ func (a *AppLogDestinationSpecLogtail) GetToken() string {
 		return ""
 	}
 	return a.Token
+}
+
+// GetBasicAuth returns the BasicAuth field.
+func (a *AppLogDestinationSpecOpenSearch) GetBasicAuth() *OpenSearchBasicAuth {
+	if a == nil {
+		return nil
+	}
+	return a.BasicAuth
+}
+
+// GetClusterName returns the ClusterName field.
+func (a *AppLogDestinationSpecOpenSearch) GetClusterName() string {
+	if a == nil {
+		return ""
+	}
+	return a.ClusterName
+}
+
+// GetEndpoint returns the Endpoint field.
+func (a *AppLogDestinationSpecOpenSearch) GetEndpoint() string {
+	if a == nil {
+		return ""
+	}
+	return a.Endpoint
+}
+
+// GetIndexName returns the IndexName field.
+func (a *AppLogDestinationSpecOpenSearch) GetIndexName() string {
+	if a == nil {
+		return ""
+	}
+	return a.IndexName
 }
 
 // GetEndpoint returns the Endpoint field.
@@ -3531,6 +3571,22 @@ func (l *ListBuildpacksResponse) GetBuildpacks() []*Buildpack {
 		return nil
 	}
 	return l.Buildpacks
+}
+
+// GetPassword returns the Password field.
+func (o *OpenSearchBasicAuth) GetPassword() string {
+	if o == nil {
+		return ""
+	}
+	return o.Password
+}
+
+// GetUser returns the User field.
+func (o *OpenSearchBasicAuth) GetUser() string {
+	if o == nil {
+		return ""
+	}
+	return o.User
 }
 
 // GetAppID returns the AppID field.

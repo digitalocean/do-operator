@@ -408,3 +408,38 @@ func (f *FakeDatabasesService) UpdateMetricsCredentials(ctx context.Context, upd
 func (f *FakeDatabasesService) ListDatabaseEvents(ctx context.Context, databaseID string, opts *godo.ListOptions) ([]godo.DatabaseEvent, *godo.Response, error) {
 	panic("not implemented")
 }
+
+// ListIndexes...
+func (f *FakeDatabasesService) ListIndexes(context.Context, string, *godo.ListOptions) ([]godo.DatabaseIndex, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// DeleteIndex...
+func (f *FakeDatabasesService) DeleteIndex(context.Context, string, string) (*godo.Response, error) {
+	panic("not implemented")
+}
+
+// CreateLogsink...
+func (f *FakeDatabasesService) CreateLogsink(context.Context, string, *godo.DatabaseCreateLogsinkRequest) (*godo.DatabaseLogsink, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// GetLogsink...
+func (f *FakeDatabasesService) GetLogsink(context.Context, string, string) (*godo.DatabaseLogsink, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// ListLogsinks...
+func (f *FakeDatabasesService) ListLogsinks(context.Context, string, *godo.ListOptions) ([]godo.DatabaseLogsink, *godo.Response, error) {
+	panic("not implemented")
+}
+
+// UpdateLogsink...
+func (f *FakeDatabasesService) UpdateLogsink(context.Context, string, string, *godo.DatabaseUpdateLogsinkRequest) (*godo.Response, error) {
+	panic("not implemented")
+}
+
+// DeleteLogsink...
+func (f *FakeDatabasesService) DeleteLogsink(context.Context, string, string) (*godo.Response, error) {
+	panic("not implemented")
+}
