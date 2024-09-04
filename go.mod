@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.33.1
+	github.com/onsi/gomega v1.34.2
 	golang.org/x/oauth2 v0.22.0
 	k8s.io/api v0.31.0
 	k8s.io/apimachinery v0.31.0
