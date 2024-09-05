@@ -110,6 +110,8 @@ release-manifests: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	mkdir -p releases
 	$(KUSTOMIZE) build config/default > releases/do-operator-${IMG_TAG}.yaml
+# replace the fake do api token cause GitGuardian thinks every base64-encoded string is a secret
+	sed -i -e 's/access-token\:\s.*/access-token: <your api token here>/g' releases/do-operator-${IMG_TAG}.yaml
 
 ##@ Build Dependencies
 
