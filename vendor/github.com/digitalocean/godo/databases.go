@@ -16,6 +16,7 @@ const (
 	databaseResizePath                  = databaseBasePath + "/%s/resize"
 	databaseMigratePath                 = databaseBasePath + "/%s/migrate"
 	databaseMaintenancePath             = databaseBasePath + "/%s/maintenance"
+	databaseUpdateInstallationPath      = databaseBasePath + "/%s/install_update"
 	databaseBackupsPath                 = databaseBasePath + "/%s/backups"
 	databaseUsersPath                   = databaseBasePath + "/%s/users"
 	databaseUserPath                    = databaseBasePath + "/%s/users/%s"
@@ -120,6 +121,7 @@ type DatabasesService interface {
 	Resize(context.Context, string, *DatabaseResizeRequest) (*Response, error)
 	Migrate(context.Context, string, *DatabaseMigrateRequest) (*Response, error)
 	UpdateMaintenance(context.Context, string, *DatabaseUpdateMaintenanceRequest) (*Response, error)
+	InstallUpdate(context.Context, string) (*Response, error)
 	ListBackups(context.Context, string, *ListOptions) ([]DatabaseBackup, *Response, error)
 	GetUser(context.Context, string, string) (*DatabaseUser, *Response, error)
 	ListUsers(context.Context, string, *ListOptions) ([]DatabaseUser, *Response, error)
@@ -252,9 +254,16 @@ type KafkaACL struct {
 	Topic      string `json:"topic,omitempty"`
 }
 
-// DatabaseUserSettings contains Kafka-specific user settings
+// OpenSearchACL contains OpenSearch specific user access control information
+type OpenSearchACL struct {
+	Permission string `json:"permission,omitempty"`
+	Index      string `json:"index,omitempty"`
+}
+
+// DatabaseUserSettings contains user settings
 type DatabaseUserSettings struct {
-	ACL []*KafkaACL `json:"acl,omitempty"`
+	ACL           []*KafkaACL      `json:"acl,omitempty"`
+	OpenSearchACL []*OpenSearchACL `json:"opensearch_acl,omitempty"`
 }
 
 // DatabaseMySQLUserSettings contains MySQL-specific user settings
@@ -505,19 +514,19 @@ type DatabaseUpdateLogsinkRequest struct {
 
 // DatabaseLogsinkConfig represents one of the configurable options (rsyslog_logsink, elasticsearch_logsink, or opensearch_logsink) for a logsink.
 type DatabaseLogsinkConfig struct {
-	URL          string `json:"url,omitempty"`
-	IndexPrefix  string `json:"index_prefix,omitempty"`
-	IndexDaysMax string `json:"index_days_max,omitempty"`
-	Timeout      string `json:"timeout,omitempty"`
-	Server       string `json:"server,omitempty"`
-	Port         int    `json:"port,omitempty"`
-	TLS          bool   `json:"tls,omitempty"`
-	Format       string `json:"format,omitempty"`
-	Logline      string `json:"logline,omitempty"`
-	SD           string `json:"sd,omitempty"`
-	CA           string `json:"ca,omitempty"`
-	Key          string `json:"key,omitempty"`
-	Cert         string `json:"cert,omitempty"`
+	URL          string  `json:"url,omitempty"`
+	IndexPrefix  string  `json:"index_prefix,omitempty"`
+	IndexDaysMax int     `json:"index_days_max,omitempty"`
+	Timeout      float32 `json:"timeout,omitempty"`
+	Server       string  `json:"server,omitempty"`
+	Port         int     `json:"port,omitempty"`
+	TLS          bool    `json:"tls,omitempty"`
+	Format       string  `json:"format,omitempty"`
+	Logline      string  `json:"logline,omitempty"`
+	SD           string  `json:"sd,omitempty"`
+	CA           string  `json:"ca,omitempty"`
+	Key          string  `json:"key,omitempty"`
+	Cert         string  `json:"cert,omitempty"`
 }
 
 // PostgreSQLConfig holds advanced configurations for PostgreSQL database clusters.
@@ -923,6 +932,20 @@ func (svc *DatabasesServiceOp) Migrate(ctx context.Context, databaseID string, m
 func (svc *DatabasesServiceOp) UpdateMaintenance(ctx context.Context, databaseID string, maintenance *DatabaseUpdateMaintenanceRequest) (*Response, error) {
 	path := fmt.Sprintf(databaseMaintenancePath, databaseID)
 	req, err := svc.client.NewRequest(ctx, http.MethodPut, path, maintenance)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := svc.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
+// InstallUpdate starts installation of updates
+func (svc *DatabasesServiceOp) InstallUpdate(ctx context.Context, databaseID string) (*Response, error) {
+	path := fmt.Sprintf(databaseUpdateInstallationPath, databaseID)
+	req, err := svc.client.NewRequest(ctx, http.MethodPut, path, nil)
 	if err != nil {
 		return nil, err
 	}
