@@ -3,6 +3,7 @@ package godo
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ const (
 	databaseResizePath                  = databaseBasePath + "/%s/resize"
 	databaseMigratePath                 = databaseBasePath + "/%s/migrate"
 	databaseMaintenancePath             = databaseBasePath + "/%s/maintenance"
+	databaseUpdateInstallationPath      = databaseBasePath + "/%s/install_update"
 	databaseBackupsPath                 = databaseBasePath + "/%s/backups"
 	databaseUsersPath                   = databaseBasePath + "/%s/users"
 	databaseUserPath                    = databaseBasePath + "/%s/users/%s"
@@ -120,6 +122,7 @@ type DatabasesService interface {
 	Resize(context.Context, string, *DatabaseResizeRequest) (*Response, error)
 	Migrate(context.Context, string, *DatabaseMigrateRequest) (*Response, error)
 	UpdateMaintenance(context.Context, string, *DatabaseUpdateMaintenanceRequest) (*Response, error)
+	InstallUpdate(context.Context, string) (*Response, error)
 	ListBackups(context.Context, string, *ListOptions) ([]DatabaseBackup, *Response, error)
 	GetUser(context.Context, string, string) (*DatabaseUser, *Response, error)
 	ListUsers(context.Context, string, *ListOptions) ([]DatabaseUser, *Response, error)
@@ -150,9 +153,15 @@ type DatabasesService interface {
 	GetPostgreSQLConfig(context.Context, string) (*PostgreSQLConfig, *Response, error)
 	GetRedisConfig(context.Context, string) (*RedisConfig, *Response, error)
 	GetMySQLConfig(context.Context, string) (*MySQLConfig, *Response, error)
+	GetMongoDBConfig(context.Context, string) (*MongoDBConfig, *Response, error)
+	GetOpensearchConfig(context.Context, string) (*OpensearchConfig, *Response, error)
+	GetKafkaConfig(context.Context, string) (*KafkaConfig, *Response, error)
 	UpdatePostgreSQLConfig(context.Context, string, *PostgreSQLConfig) (*Response, error)
 	UpdateRedisConfig(context.Context, string, *RedisConfig) (*Response, error)
 	UpdateMySQLConfig(context.Context, string, *MySQLConfig) (*Response, error)
+	UpdateMongoDBConfig(context.Context, string, *MongoDBConfig) (*Response, error)
+	UpdateOpensearchConfig(context.Context, string, *OpensearchConfig) (*Response, error)
+	UpdateKafkaConfig(context.Context, string, *KafkaConfig) (*Response, error)
 	ListOptions(todo context.Context) (*DatabaseOptions, *Response, error)
 	UpgradeMajorVersion(context.Context, string, *UpgradeVersionRequest) (*Response, error)
 	ListTopics(context.Context, string, *ListOptions) ([]DatabaseTopic, *Response, error)
@@ -252,9 +261,16 @@ type KafkaACL struct {
 	Topic      string `json:"topic,omitempty"`
 }
 
-// DatabaseUserSettings contains Kafka-specific user settings
+// OpenSearchACL contains OpenSearch specific user access control information
+type OpenSearchACL struct {
+	Permission string `json:"permission,omitempty"`
+	Index      string `json:"index,omitempty"`
+}
+
+// DatabaseUserSettings contains user settings
 type DatabaseUserSettings struct {
-	ACL []*KafkaACL `json:"acl,omitempty"`
+	ACL           []*KafkaACL      `json:"acl,omitempty"`
+	OpenSearchACL []*OpenSearchACL `json:"opensearch_acl,omitempty"`
 }
 
 // DatabaseMySQLUserSettings contains MySQL-specific user settings
@@ -505,19 +521,19 @@ type DatabaseUpdateLogsinkRequest struct {
 
 // DatabaseLogsinkConfig represents one of the configurable options (rsyslog_logsink, elasticsearch_logsink, or opensearch_logsink) for a logsink.
 type DatabaseLogsinkConfig struct {
-	URL          string `json:"url,omitempty"`
-	IndexPrefix  string `json:"index_prefix,omitempty"`
-	IndexDaysMax string `json:"index_days_max,omitempty"`
-	Timeout      string `json:"timeout,omitempty"`
-	Server       string `json:"server,omitempty"`
-	Port         int    `json:"port,omitempty"`
-	TLS          bool   `json:"tls,omitempty"`
-	Format       string `json:"format,omitempty"`
-	Logline      string `json:"logline,omitempty"`
-	SD           string `json:"sd,omitempty"`
-	CA           string `json:"ca,omitempty"`
-	Key          string `json:"key,omitempty"`
-	Cert         string `json:"cert,omitempty"`
+	URL          string  `json:"url,omitempty"`
+	IndexPrefix  string  `json:"index_prefix,omitempty"`
+	IndexDaysMax int     `json:"index_days_max,omitempty"`
+	Timeout      float32 `json:"timeout,omitempty"`
+	Server       string  `json:"server,omitempty"`
+	Port         int     `json:"port,omitempty"`
+	TLS          bool    `json:"tls,omitempty"`
+	Format       string  `json:"format,omitempty"`
+	Logline      string  `json:"logline,omitempty"`
+	SD           string  `json:"sd,omitempty"`
+	CA           string  `json:"ca,omitempty"`
+	Key          string  `json:"key,omitempty"`
+	Cert         string  `json:"cert,omitempty"`
 }
 
 // PostgreSQLConfig holds advanced configurations for PostgreSQL database clusters.
@@ -573,6 +589,9 @@ type PostgreSQLConfig struct {
 	BackupMinute                    *int                         `json:"backup_minute,omitempty"`
 	WorkMem                         *int                         `json:"work_mem,omitempty"`
 	TimeScaleDB                     *PostgreSQLTimeScaleDBConfig `json:"timescaledb,omitempty"`
+	SynchronousReplication          *string                      `json:"synchronous_replication,omitempty"`
+	StatMonitorEnable               *bool                        `json:"stat_monitor_enable,omitempty"`
+	MaxFailoverReplicationTimeLag   *int64                       `json:"max_failover_replication_time_lag,omitempty"`
 }
 
 // PostgreSQLBouncerConfig configuration
@@ -637,6 +656,85 @@ type MySQLConfig struct {
 	BackupHour                   *int     `json:"backup_hour,omitempty"`
 	BackupMinute                 *int     `json:"backup_minute,omitempty"`
 	BinlogRetentionPeriod        *int     `json:"binlog_retention_period,omitempty"`
+	InnodbChangeBufferMaxSize    *int     `json:"innodb_change_buffer_max_size,omitempty"`
+	InnodbFlushNeighbors         *int     `json:"innodb_flush_neighbors,omitempty"`
+	InnodbReadIoThreads          *int     `json:"innodb_read_io_threads,omitempty"`
+	InnodbThreadConcurrency      *int     `json:"innodb_thread_concurrency,omitempty"`
+	InnodbWriteIoThreads         *int     `json:"innodb_write_io_threads,omitempty"`
+	NetBufferLength              *int     `json:"net_buffer_length,omitempty"`
+	LogOutput                    *string  `json:"log_output,omitempty"`
+}
+
+// MongoDBConfig holds advanced configurations for MongoDB database clusters.
+type MongoDBConfig struct {
+	DefaultReadConcern              *string `json:"default_read_concern,omitempty"`
+	DefaultWriteConcern             *string `json:"default_write_concern,omitempty"`
+	TransactionLifetimeLimitSeconds *int    `json:"transaction_lifetime_limit_seconds,omitempty"`
+	SlowOpThresholdMs               *int    `json:"slow_op_threshold_ms,omitempty"`
+	Verbosity                       *int    `json:"verbosity,omitempty"`
+}
+
+// KafkaConfig holds advanced configurations for Kafka database clusters.
+type KafkaConfig struct {
+	GroupInitialRebalanceDelayMs       *int     `json:"group_initial_rebalance_delay_ms,omitempty"`
+	GroupMinSessionTimeoutMs           *int     `json:"group_min_session_timeout_ms,omitempty"`
+	GroupMaxSessionTimeoutMs           *int     `json:"group_max_session_timeout_ms,omitempty"`
+	MessageMaxBytes                    *int     `json:"message_max_bytes,omitempty"`
+	LogCleanerDeleteRetentionMs        *int64   `json:"log_cleaner_delete_retention_ms,omitempty"`
+	LogCleanerMinCompactionLagMs       *uint64  `json:"log_cleaner_min_compaction_lag_ms,omitempty"`
+	LogFlushIntervalMs                 *uint64  `json:"log_flush_interval_ms,omitempty"`
+	LogIndexIntervalBytes              *int     `json:"log_index_interval_bytes,omitempty"`
+	LogMessageDownconversionEnable     *bool    `json:"log_message_downconversion_enable,omitempty"`
+	LogMessageTimestampDifferenceMaxMs *uint64  `json:"log_message_timestamp_difference_max_ms,omitempty"`
+	LogPreallocate                     *bool    `json:"log_preallocate,omitempty"`
+	LogRetentionBytes                  *big.Int `json:"log_retention_bytes,omitempty"`
+	LogRetentionHours                  *int     `json:"log_retention_hours,omitempty"`
+	LogRetentionMs                     *big.Int `json:"log_retention_ms,omitempty"`
+	LogRollJitterMs                    *uint64  `json:"log_roll_jitter_ms,omitempty"`
+	LogSegmentDeleteDelayMs            *int     `json:"log_segment_delete_delay_ms,omitempty"`
+	AutoCreateTopicsEnable             *bool    `json:"auto_create_topics_enable,omitempty"`
+}
+
+// OpensearchConfig holds advanced configurations for Opensearch database clusters.
+type OpensearchConfig struct {
+	HttpMaxContentLengthBytes                        *int     `json:"http_max_content_length_bytes,omitempty"`
+	HttpMaxHeaderSizeBytes                           *int     `json:"http_max_header_size_bytes,omitempty"`
+	HttpMaxInitialLineLengthBytes                    *int     `json:"http_max_initial_line_length_bytes,omitempty"`
+	IndicesQueryBoolMaxClauseCount                   *int     `json:"indices_query_bool_max_clause_count,omitempty"`
+	IndicesFielddataCacheSizePercentage              *int     `json:"indices_fielddata_cache_size_percentage,omitempty"`
+	IndicesMemoryIndexBufferSizePercentage           *int     `json:"indices_memory_index_buffer_size_percentage,omitempty"`
+	IndicesMemoryMinIndexBufferSizeMb                *int     `json:"indices_memory_min_index_buffer_size_mb,omitempty"`
+	IndicesMemoryMaxIndexBufferSizeMb                *int     `json:"indices_memory_max_index_buffer_size_mb,omitempty"`
+	IndicesQueriesCacheSizePercentage                *int     `json:"indices_queries_cache_size_percentage,omitempty"`
+	IndicesRecoveryMaxMbPerSec                       *int     `json:"indices_recovery_max_mb_per_sec,omitempty"`
+	IndicesRecoveryMaxConcurrentFileChunks           *int     `json:"indices_recovery_max_concurrent_file_chunks,omitempty"`
+	ThreadPoolSearchSize                             *int     `json:"thread_pool_search_size,omitempty"`
+	ThreadPoolSearchThrottledSize                    *int     `json:"thread_pool_search_throttled_size,omitempty"`
+	ThreadPoolGetSize                                *int     `json:"thread_pool_get_size,omitempty"`
+	ThreadPoolAnalyzeSize                            *int     `json:"thread_pool_analyze_size,omitempty"`
+	ThreadPoolWriteSize                              *int     `json:"thread_pool_write_size,omitempty"`
+	ThreadPoolForceMergeSize                         *int     `json:"thread_pool_force_merge_size,omitempty"`
+	ThreadPoolSearchQueueSize                        *int     `json:"thread_pool_search_queue_size,omitempty"`
+	ThreadPoolSearchThrottledQueueSize               *int     `json:"thread_pool_search_throttled_queue_size,omitempty"`
+	ThreadPoolGetQueueSize                           *int     `json:"thread_pool_get_queue_size,omitempty"`
+	ThreadPoolAnalyzeQueueSize                       *int     `json:"thread_pool_analyze_queue_size,omitempty"`
+	ThreadPoolWriteQueueSize                         *int     `json:"thread_pool_write_queue_size,omitempty"`
+	IsmEnabled                                       *bool    `json:"ism_enabled,omitempty"`
+	IsmHistoryEnabled                                *bool    `json:"ism_history_enabled,omitempty"`
+	IsmHistoryMaxAgeHours                            *int     `json:"ism_history_max_age_hours,omitempty"`
+	IsmHistoryMaxDocs                                *int64   `json:"ism_history_max_docs,omitempty"`
+	IsmHistoryRolloverCheckPeriodHours               *int     `json:"ism_history_rollover_check_period_hours,omitempty"`
+	IsmHistoryRolloverRetentionPeriodDays            *int     `json:"ism_history_rollover_retention_period_days,omitempty"`
+	SearchMaxBuckets                                 *int     `json:"search_max_buckets,omitempty"`
+	ActionAutoCreateIndexEnabled                     *bool    `json:"action_auto_create_index_enabled,omitempty"`
+	EnableSecurityAudit                              *bool    `json:"enable_security_audit,omitempty"`
+	ActionDestructiveRequiresName                    *bool    `json:"action_destructive_requires_name,omitempty"`
+	ClusterMaxShardsPerNode                          *int     `json:"cluster_max_shards_per_node,omitempty"`
+	OverrideMainResponseVersion                      *bool    `json:"override_main_response_version,omitempty"`
+	ScriptMaxCompilationsRate                        *string  `json:"script_max_compilations_rate,omitempty"`
+	ClusterRoutingAllocationNodeConcurrentRecoveries *int     `json:"cluster_routing_allocation_node_concurrent_recoveries,omitempty"`
+	ReindexRemoteWhitelist                           []string `json:"reindex_remote_whitelist,omitempty"`
+	PluginsAlertingFilterByBackendRolesEnabled       *bool    `json:"plugins_alerting_filter_by_backend_roles_enabled,omitempty"`
 }
 
 type databaseUserRoot struct {
@@ -677,6 +775,18 @@ type databaseRedisConfigRoot struct {
 
 type databaseMySQLConfigRoot struct {
 	Config *MySQLConfig `json:"config"`
+}
+
+type databaseMongoDBConfigRoot struct {
+	Config *MongoDBConfig `json:"config"`
+}
+
+type databaseOpensearchConfigRoot struct {
+	Config *OpensearchConfig `json:"config"`
+}
+
+type databaseKafkaConfigRoot struct {
+	Config *KafkaConfig `json:"config"`
 }
 
 type databaseBackupsRoot struct {
@@ -923,6 +1033,20 @@ func (svc *DatabasesServiceOp) Migrate(ctx context.Context, databaseID string, m
 func (svc *DatabasesServiceOp) UpdateMaintenance(ctx context.Context, databaseID string, maintenance *DatabaseUpdateMaintenanceRequest) (*Response, error) {
 	path := fmt.Sprintf(databaseMaintenancePath, databaseID)
 	req, err := svc.client.NewRequest(ctx, http.MethodPut, path, maintenance)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := svc.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
+// InstallUpdate starts installation of updates
+func (svc *DatabasesServiceOp) InstallUpdate(ctx context.Context, databaseID string) (*Response, error) {
+	path := fmt.Sprintf(databaseUpdateInstallationPath, databaseID)
+	req, err := svc.client.NewRequest(ctx, http.MethodPut, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1463,6 +1587,102 @@ func (svc *DatabasesServiceOp) GetMySQLConfig(ctx context.Context, databaseID st
 func (svc *DatabasesServiceOp) UpdateMySQLConfig(ctx context.Context, databaseID string, config *MySQLConfig) (*Response, error) {
 	path := fmt.Sprintf(databaseConfigPath, databaseID)
 	root := &databaseMySQLConfigRoot{
+		Config: config,
+	}
+	req, err := svc.client.NewRequest(ctx, http.MethodPatch, path, root)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := svc.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
+// GetMongoDBConfig retrieves the config for a MongoDB database cluster.
+func (svc *DatabasesServiceOp) GetMongoDBConfig(ctx context.Context, databaseID string) (*MongoDBConfig, *Response, error) {
+	path := fmt.Sprintf(databaseConfigPath, databaseID)
+	req, err := svc.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	root := new(databaseMongoDBConfigRoot)
+	resp, err := svc.client.Do(ctx, req, root)
+	if err != nil {
+		return nil, resp, err
+	}
+	return root.Config, resp, nil
+}
+
+// UpdateMongoDBConfig updates the config for a MongoDB database cluster.
+func (svc *DatabasesServiceOp) UpdateMongoDBConfig(ctx context.Context, databaseID string, config *MongoDBConfig) (*Response, error) {
+	path := fmt.Sprintf(databaseConfigPath, databaseID)
+	root := &databaseMongoDBConfigRoot{
+		Config: config,
+	}
+	req, err := svc.client.NewRequest(ctx, http.MethodPatch, path, root)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := svc.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
+// GetKafkaConfig retrieves the config for a Kafka database cluster.
+func (svc *DatabasesServiceOp) GetKafkaConfig(ctx context.Context, databaseID string) (*KafkaConfig, *Response, error) {
+	path := fmt.Sprintf(databaseConfigPath, databaseID)
+	req, err := svc.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	root := new(databaseKafkaConfigRoot)
+	resp, err := svc.client.Do(ctx, req, root)
+	if err != nil {
+		return nil, resp, err
+	}
+	return root.Config, resp, nil
+}
+
+// UpdateKafkaConfig updates the config for a Kafka database cluster.
+func (svc *DatabasesServiceOp) UpdateKafkaConfig(ctx context.Context, databaseID string, config *KafkaConfig) (*Response, error) {
+	path := fmt.Sprintf(databaseConfigPath, databaseID)
+	root := &databaseKafkaConfigRoot{
+		Config: config,
+	}
+	req, err := svc.client.NewRequest(ctx, http.MethodPatch, path, root)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := svc.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
+// GetOpensearchConfig retrieves the config for a Opensearch database cluster.
+func (svc *DatabasesServiceOp) GetOpensearchConfig(ctx context.Context, databaseID string) (*OpensearchConfig, *Response, error) {
+	path := fmt.Sprintf(databaseConfigPath, databaseID)
+	req, err := svc.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	root := new(databaseOpensearchConfigRoot)
+	resp, err := svc.client.Do(ctx, req, root)
+	if err != nil {
+		return nil, resp, err
+	}
+	return root.Config, resp, nil
+}
+
+// UpdateOpensearchConfig updates the config for a Opensearch database cluster.
+func (svc *DatabasesServiceOp) UpdateOpensearchConfig(ctx context.Context, databaseID string, config *OpensearchConfig) (*Response, error) {
+	path := fmt.Sprintf(databaseConfigPath, databaseID)
+	root := &databaseOpensearchConfigRoot{
 		Config: config,
 	}
 	req, err := svc.client.NewRequest(ctx, http.MethodPatch, path, root)

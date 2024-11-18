@@ -40,6 +40,7 @@ type AppsService interface {
 	CreateDeployment(ctx context.Context, appID string, create ...*DeploymentCreateRequest) (*Deployment, *Response, error)
 
 	GetLogs(ctx context.Context, appID, deploymentID, component string, logType AppLogType, follow bool, tailLines int) (*AppLogs, *Response, error)
+	GetExec(ctx context.Context, appID, deploymentID, component string) (*AppExec, *Response, error)
 
 	ListRegions(ctx context.Context) ([]*AppRegion, *Response, error)
 
@@ -75,6 +76,11 @@ type AppsService interface {
 type AppLogs struct {
 	LiveURL      string   `json:"live_url"`
 	HistoricURLs []string `json:"historic_urls"`
+}
+
+// AppExec represents the websocket URL used for sending/receiving console input and output.
+type AppExec struct {
+	URL string `json:"url"`
 }
 
 // AppUpdateRequest represents a request to update an app.
@@ -368,6 +374,27 @@ func (s *AppsServiceOp) GetLogs(ctx context.Context, appID, deploymentID, compon
 	return logs, resp, nil
 }
 
+// GetExec retrieves the websocket URL used for sending/receiving console input and output.
+func (s *AppsServiceOp) GetExec(ctx context.Context, appID, deploymentID, component string) (*AppExec, *Response, error) {
+	var url string
+	if deploymentID == "" {
+		url = fmt.Sprintf("%s/%s/components/%s/exec", appsBasePath, appID, component)
+	} else {
+		url = fmt.Sprintf("%s/%s/deployments/%s/components/%s/exec", appsBasePath, appID, deploymentID, component)
+	}
+
+	req, err := s.client.NewRequest(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	logs := new(AppExec)
+	resp, err := s.client.Do(ctx, req, logs)
+	if err != nil {
+		return nil, resp, err
+	}
+	return logs, resp, nil
+}
+
 // ListRegions lists all regions supported by App Platform.
 func (s *AppsServiceOp) ListRegions(ctx context.Context) ([]*AppRegion, *Response, error) {
 	path := fmt.Sprintf("%s/regions", appsBasePath)
@@ -384,6 +411,9 @@ func (s *AppsServiceOp) ListRegions(ctx context.Context) ([]*AppRegion, *Respons
 }
 
 // ListTiers lists available app tiers.
+//
+// Deprecated: The '/v2/apps/tiers' endpoint has been deprecated as app tiers
+// are no longer tied to instance sizes. The concept of tiers is being retired.
 func (s *AppsServiceOp) ListTiers(ctx context.Context) ([]*AppTier, *Response, error) {
 	path := fmt.Sprintf("%s/tiers", appsBasePath)
 	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
@@ -399,6 +429,9 @@ func (s *AppsServiceOp) ListTiers(ctx context.Context) ([]*AppTier, *Response, e
 }
 
 // GetTier retrieves information about a specific app tier.
+//
+// Deprecated: The '/v2/apps/tiers/{slug}' endpoints have been deprecated as app
+// tiers are no longer tied to instance sizes. The concept of tiers is being retired.
 func (s *AppsServiceOp) GetTier(ctx context.Context, slug string) (*AppTier, *Response, error) {
 	path := fmt.Sprintf("%s/tiers/%s", appsBasePath, slug)
 	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
