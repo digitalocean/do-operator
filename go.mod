@@ -1,6 +1,6 @@
 module github.com/digitalocean/do-operator
 
-go 1.23.0
+go 1.23.5
 
 // older version of mergo is required by k8s.io/client-go
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.6
