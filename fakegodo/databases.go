@@ -35,26 +35,9 @@ type FakeDatabasesService struct {
 	mu        sync.RWMutex
 	databases []godo.Database
 	users     map[string][]godo.DatabaseUser
-}
 
-// UpdatePool ...
-func (f *FakeDatabasesService) UpdatePool(_ context.Context, _ string, _ string, _ *godo.DatabaseUpdatePoolRequest) (*godo.Response, error) {
-	panic("implement me")
-}
-
-// PromoteReplicaToPrimary ...
-func (f *FakeDatabasesService) PromoteReplicaToPrimary(_ context.Context, _ string, _ string) (*godo.Response, error) {
-	panic("implement me")
-}
-
-// UpgradeMajorVersion ...
-func (f *FakeDatabasesService) UpgradeMajorVersion(_ context.Context, _ string, _ *godo.UpgradeVersionRequest) (*godo.Response, error) {
-	panic("implement me")
-}
-
-// List ...
-func (f *FakeDatabasesService) List(_ context.Context, _ *godo.ListOptions) ([]godo.Database, *godo.Response, error) {
-	panic("not implemented")
+	// satisfy interface for unimplemented methods
+	godo.DatabasesService
 }
 
 // Get ...
@@ -71,11 +54,6 @@ func (f *FakeDatabasesService) Get(_ context.Context, dbUUID string) (*godo.Data
 	}
 
 	return nil, notFoundResponse, errors.New("not found")
-}
-
-// GetCA ...
-func (f *FakeDatabasesService) GetCA(_ context.Context, _ string) (*godo.DatabaseCA, *godo.Response, error) {
-	panic("not implemented")
 }
 
 // Create ...
@@ -148,21 +126,6 @@ func (f *FakeDatabasesService) Resize(_ context.Context, dbUUID string, req *god
 	return notFoundResponse, errors.New("not found")
 }
 
-// Migrate ...
-func (f *FakeDatabasesService) Migrate(_ context.Context, _ string, _ *godo.DatabaseMigrateRequest) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// UpdateMaintenance ...
-func (f *FakeDatabasesService) UpdateMaintenance(_ context.Context, _ string, _ *godo.DatabaseUpdateMaintenanceRequest) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// ListBackups ...
-func (f *FakeDatabasesService) ListBackups(_ context.Context, _ string, _ *godo.ListOptions) ([]godo.DatabaseBackup, *godo.Response, error) {
-	panic("not implemented")
-}
-
 // GetUser ...
 func (f *FakeDatabasesService) GetUser(_ context.Context, dbUUID string, username string) (*godo.DatabaseUser, *godo.Response, error) {
 	f.mu.RLock()
@@ -180,11 +143,6 @@ func (f *FakeDatabasesService) GetUser(_ context.Context, dbUUID string, usernam
 	}
 
 	return nil, notFoundResponse, errors.New("not found")
-}
-
-// ListUsers ...
-func (f *FakeDatabasesService) ListUsers(_ context.Context, _ string, _ *godo.ListOptions) ([]godo.DatabaseUser, *godo.Response, error) {
-	panic("not implemented")
 }
 
 // CreateUser ...
@@ -214,11 +172,6 @@ func (f *FakeDatabasesService) CreateUser(_ context.Context, dbUUID string, req 
 	return nil, notFoundResponse, errors.New("not found")
 }
 
-// UpdateUser ...
-func (f *FakeDatabasesService) UpdateUser(context.Context, string, string, *godo.DatabaseUpdateUserRequest) (*godo.DatabaseUser, *godo.Response, error) {
-	panic("not implemented")
-}
-
 // DeleteUser ...
 func (f *FakeDatabasesService) DeleteUser(_ context.Context, dbUUID string, username string) (*godo.Response, error) {
 	f.mu.Lock()
@@ -239,207 +192,7 @@ func (f *FakeDatabasesService) DeleteUser(_ context.Context, dbUUID string, user
 	return notFoundResponse, errors.New("not found")
 }
 
-// ResetUserAuth ...
-func (f *FakeDatabasesService) ResetUserAuth(_ context.Context, _ string, _ string, _ *godo.DatabaseResetUserAuthRequest) (*godo.DatabaseUser, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// ListDBs ...
-func (f *FakeDatabasesService) ListDBs(_ context.Context, _ string, _ *godo.ListOptions) ([]godo.DatabaseDB, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// CreateDB ...
-func (f *FakeDatabasesService) CreateDB(_ context.Context, _ string, _ *godo.DatabaseCreateDBRequest) (*godo.DatabaseDB, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetDB ...
-func (f *FakeDatabasesService) GetDB(_ context.Context, _ string, _ string) (*godo.DatabaseDB, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// DeleteDB ...
-func (f *FakeDatabasesService) DeleteDB(_ context.Context, _ string, _ string) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// ListPools ...
-func (f *FakeDatabasesService) ListPools(_ context.Context, _ string, _ *godo.ListOptions) ([]godo.DatabasePool, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// CreatePool ...
-func (f *FakeDatabasesService) CreatePool(_ context.Context, _ string, _ *godo.DatabaseCreatePoolRequest) (*godo.DatabasePool, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetPool ...
-func (f *FakeDatabasesService) GetPool(_ context.Context, _ string, _ string) (*godo.DatabasePool, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// DeletePool ...
-func (f *FakeDatabasesService) DeletePool(_ context.Context, _ string, _ string) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetReplica ...
-func (f *FakeDatabasesService) GetReplica(_ context.Context, _ string, _ string) (*godo.DatabaseReplica, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// ListReplicas ...
-func (f *FakeDatabasesService) ListReplicas(_ context.Context, _ string, _ *godo.ListOptions) ([]godo.DatabaseReplica, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// CreateReplica ...
-func (f *FakeDatabasesService) CreateReplica(_ context.Context, _ string, _ *godo.DatabaseCreateReplicaRequest) (*godo.DatabaseReplica, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// DeleteReplica ...
-func (f *FakeDatabasesService) DeleteReplica(_ context.Context, _ string, _ string) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetEvictionPolicy ...
-func (f *FakeDatabasesService) GetEvictionPolicy(_ context.Context, _ string) (string, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// SetEvictionPolicy ...
-func (f *FakeDatabasesService) SetEvictionPolicy(_ context.Context, _ string, _ string) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetSQLMode ...
-func (f *FakeDatabasesService) GetSQLMode(_ context.Context, _ string) (string, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// SetSQLMode ...
-func (f *FakeDatabasesService) SetSQLMode(_ context.Context, _ string, _ ...string) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetFirewallRules ...
-func (f *FakeDatabasesService) GetFirewallRules(_ context.Context, _ string) ([]godo.DatabaseFirewallRule, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// UpdateFirewallRules ...
-func (f *FakeDatabasesService) UpdateFirewallRules(_ context.Context, _ string, _ *godo.DatabaseUpdateFirewallRulesRequest) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetPostgreSQLConfig ...
-func (f *FakeDatabasesService) GetPostgreSQLConfig(_ context.Context, _ string) (*godo.PostgreSQLConfig, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetRedisConfig ...
-func (f *FakeDatabasesService) GetRedisConfig(_ context.Context, _ string) (*godo.RedisConfig, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetMySQLConfig ...
-func (f *FakeDatabasesService) GetMySQLConfig(_ context.Context, _ string) (*godo.MySQLConfig, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// UpdatePostgreSQLConfig ...
-func (f *FakeDatabasesService) UpdatePostgreSQLConfig(_ context.Context, _ string, _ *godo.PostgreSQLConfig) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// UpdateRedisConfig ...
-func (f *FakeDatabasesService) UpdateRedisConfig(_ context.Context, _ string, _ *godo.RedisConfig) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// UpdateMySQLConfig ...
-func (f *FakeDatabasesService) UpdateMySQLConfig(_ context.Context, _ string, _ *godo.MySQLConfig) (*godo.Response, error) {
-	panic("not implemented")
-}
-
 // ListOptions ...
 func (f *FakeDatabasesService) ListOptions(todo context.Context) (*godo.DatabaseOptions, *godo.Response, error) {
 	return f.Options, okResponse, nil
-}
-
-// ListTopic ...
-func (f *FakeDatabasesService) ListTopics(context.Context, string, *godo.ListOptions) ([]godo.DatabaseTopic, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// CreateTopic ...
-func (f *FakeDatabasesService) CreateTopic(context.Context, string, *godo.DatabaseCreateTopicRequest) (*godo.DatabaseTopic, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetTopic ...
-func (f *FakeDatabasesService) GetTopic(context.Context, string, string) (*godo.DatabaseTopic, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// DeleteTopic ...
-func (f *FakeDatabasesService) DeleteTopic(context.Context, string, string) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// UpdateTopic ...
-func (f *FakeDatabasesService) UpdateTopic(context.Context, string, string, *godo.DatabaseUpdateTopicRequest) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetMetricsCredentials ...
-func (f *FakeDatabasesService) GetMetricsCredentials(ctx context.Context) (*godo.DatabaseMetricsCredentials, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// UpdateMetricsCredentials ...
-func (f *FakeDatabasesService) UpdateMetricsCredentials(ctx context.Context, updateCreds *godo.DatabaseUpdateMetricsCredentialsRequest) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// ListDatabaseEvents ...
-func (f *FakeDatabasesService) ListDatabaseEvents(ctx context.Context, databaseID string, opts *godo.ListOptions) ([]godo.DatabaseEvent, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// ListIndexes...
-func (f *FakeDatabasesService) ListIndexes(context.Context, string, *godo.ListOptions) ([]godo.DatabaseIndex, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// DeleteIndex...
-func (f *FakeDatabasesService) DeleteIndex(context.Context, string, string) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// CreateLogsink...
-func (f *FakeDatabasesService) CreateLogsink(context.Context, string, *godo.DatabaseCreateLogsinkRequest) (*godo.DatabaseLogsink, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// GetLogsink...
-func (f *FakeDatabasesService) GetLogsink(context.Context, string, string) (*godo.DatabaseLogsink, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// ListLogsinks...
-func (f *FakeDatabasesService) ListLogsinks(context.Context, string, *godo.ListOptions) ([]godo.DatabaseLogsink, *godo.Response, error) {
-	panic("not implemented")
-}
-
-// UpdateLogsink...
-func (f *FakeDatabasesService) UpdateLogsink(context.Context, string, string, *godo.DatabaseUpdateLogsinkRequest) (*godo.Response, error) {
-	panic("not implemented")
-}
-
-// DeleteLogsink...
-func (f *FakeDatabasesService) DeleteLogsink(context.Context, string, string) (*godo.Response, error) {
-	panic("not implemented")
 }
