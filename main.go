@@ -38,6 +38,7 @@ import (
 	"github.com/digitalocean/godo"
 
 	databasesv1alpha1 "github.com/digitalocean/do-operator/api/v1alpha1"
+	"github.com/digitalocean/do-operator/api/webhooks"
 	"github.com/digitalocean/do-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -134,7 +135,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DatabaseClusterReference")
 		os.Exit(1)
 	}
-	if err = (&databasesv1alpha1.DatabaseClusterReference{}).SetupWebhookWithManager(mgr, godoClient); err != nil {
+	if err = webhooks.SetupDatabaseClusterReferenceWebhookWithManager(mgr, godoClient); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseClusterReference")
 		os.Exit(1)
 	}
@@ -146,7 +147,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DatabaseUser")
 		os.Exit(1)
 	}
-	if err = (&databasesv1alpha1.DatabaseUser{}).SetupWebhookWithManager(mgr, godoClient); err != nil {
+	if err = webhooks.SetupDatabaseUserWebhookWithManager(mgr, godoClient); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseUser")
 		os.Exit(1)
 	}
@@ -158,11 +159,11 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DatabaseUserReference")
 		os.Exit(1)
 	}
-	if err = (&databasesv1alpha1.DatabaseUserReference{}).SetupWebhookWithManager(mgr, godoClient); err != nil {
+	if err = webhooks.SetupDatabaseUserReferenceWebhookWithManager(mgr, godoClient); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseUserReference")
 		os.Exit(1)
 	}
-	if err = (&databasesv1alpha1.DatabaseCluster{}).SetupWebhookWithManager(mgr, godoClient); err != nil {
+	if err = webhooks.SetupDatabaseClusterWebhookWithManager(mgr, godoClient); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "DatabaseCluster")
 		os.Exit(1)
 	}
