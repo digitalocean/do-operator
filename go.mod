@@ -1,12 +1,13 @@
 module github.com/digitalocean/do-operator
 
 go 1.23.5
+toolchain go1.24.1
 
 // older version of mergo is required by k8s.io/client-go
 // replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.6
 
 require (
-	github.com/digitalocean/godo v1.134.0
+	github.com/digitalocean/godo v1.140.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo v1.16.5
