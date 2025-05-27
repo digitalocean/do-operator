@@ -113,6 +113,10 @@ type Informer interface {
 	// the handler again and an error if the handler cannot be added.
 	AddEventHandlerWithResyncPeriod(handler toolscache.ResourceEventHandler, resyncPeriod time.Duration) (toolscache.ResourceEventHandlerRegistration, error)
 
+	// AddEventHandlerWithOptions is a variant of AddEventHandlerWithResyncPeriod where
+	// all optional parameters are passed in as a struct.
+	AddEventHandlerWithOptions(handler toolscache.ResourceEventHandler, options toolscache.HandlerOptions) (toolscache.ResourceEventHandlerRegistration, error)
+
 	// RemoveEventHandler removes a previously added event handler given by
 	// its registration handle.
 	// This function is guaranteed to be idempotent and thread-safe.
@@ -207,11 +211,11 @@ type Options struct {
 	// to reduce the caches memory usage.
 	DefaultTransform toolscache.TransformFunc
 
-	// DefaultWatchErrorHandler will be used to the WatchErrorHandler which is called
+	// DefaultWatchErrorHandler will be used to set the WatchErrorHandler which is called
 	// whenever ListAndWatch drops the connection with an error.
 	//
 	// After calling this handler, the informer will backoff and retry.
-	DefaultWatchErrorHandler toolscache.WatchErrorHandler
+	DefaultWatchErrorHandler toolscache.WatchErrorHandlerWithContext
 
 	// DefaultUnsafeDisableDeepCopy is the default for UnsafeDisableDeepCopy
 	// for everything that doesn't specify this.
@@ -469,6 +473,8 @@ func defaultOpts(config *rest.Config, opts Options) (Options, error) {
 		}
 	}
 
+	opts.ByObject = maps.Clone(opts.ByObject)
+	opts.DefaultNamespaces = maps.Clone(opts.DefaultNamespaces)
 	for obj, byObject := range opts.ByObject {
 		isNamespaced, err := apiutil.IsObjectNamespaced(obj, opts.Scheme, opts.Mapper)
 		if err != nil {
@@ -480,6 +486,8 @@ func defaultOpts(config *rest.Config, opts Options) (Options, error) {
 
 		if isNamespaced && byObject.Namespaces == nil {
 			byObject.Namespaces = maps.Clone(opts.DefaultNamespaces)
+		} else {
+			byObject.Namespaces = maps.Clone(byObject.Namespaces)
 		}
 
 		// Default the namespace-level configs first, because they need to use the undefaulted type-level config
@@ -487,7 +495,6 @@ func defaultOpts(config *rest.Config, opts Options) (Options, error) {
 		for namespace, config := range byObject.Namespaces {
 			// 1. Default from the undefaulted type-level config
 			config = defaultConfig(config, byObjectToConfig(byObject))
-
 			// 2. Default from the namespace-level config. This was defaulted from the global default config earlier, but
 			//    might not have an entry for the current namespace.
 			if defaultNamespaceSettings, hasDefaultNamespace := opts.DefaultNamespaces[namespace]; hasDefaultNamespace {
