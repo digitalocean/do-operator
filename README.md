@@ -130,7 +130,7 @@ make uninstall
 4. Create and merge PR
 
 ### Release
-1. Create release manifest files by running `IMG_TAG=vX.Y.Z make release-manifests`
+1. Create release manifest files by running `GITHUB_TOKEN=<redacted> IMG_TAG=vX.Y.Z make release-manifests`
 2. Create and merge PR
 3. [Trigger the `release` GitHub action workflow](https://github.com/digitalocean/do-operator/actions/workflows/release.yml)
     - Draft a new release [here](https://github.com/digitalocean/do-operator/releases) for the new version
