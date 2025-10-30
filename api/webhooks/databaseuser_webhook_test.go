@@ -1,7 +1,6 @@
 package webhooks
 
 import (
-	"github.com/digitalocean/do-operator/api/v1alpha1"
 	"github.com/digitalocean/godo"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -9,6 +8,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/digitalocean/do-operator/api/v1alpha1"
 )
 
 var (
