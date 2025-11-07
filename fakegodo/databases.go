@@ -68,7 +68,7 @@ func (f *FakeDatabasesService) Create(_ context.Context, req *godo.DatabaseCreat
 		RegionSlug:  req.Region,
 		CreatedAt:   time.Now(),
 		Connection: &godo.DatabaseConnection{
-			URI:      "uri",
+			URI:      "postgresql://user:password@host:12345/database?sslmode=require",
 			Database: "database",
 			Host:     "host",
 			Port:     12345,
@@ -77,7 +77,7 @@ func (f *FakeDatabasesService) Create(_ context.Context, req *godo.DatabaseCreat
 			SSL:      true,
 		},
 		PrivateConnection: &godo.DatabaseConnection{
-			URI:      "private-uri",
+			URI:      "postgresql://private-user:private-password@private-host:12345/private-database?sslmode=require",
 			Database: "private-database",
 			Host:     "private_host",
 			Port:     12345,
