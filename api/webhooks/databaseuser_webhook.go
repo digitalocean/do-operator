@@ -26,13 +26,11 @@ import (
 	"github.com/digitalocean/godo"
 	"github.com/google/go-cmp/cmp"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -43,8 +41,7 @@ func SetupDatabaseUserWebhookWithManager(mgr ctrl.Manager, godoClient *godo.Clie
 	initGlobalGodoClient(godoClient)
 	initGlobalK8sClient(mgr.GetClient())
 
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(&v1alpha1.DatabaseUser{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.DatabaseUser{}).
 		WithValidator(&DatabaseUserValidator{}).
 		Complete()
 }
@@ -52,15 +49,8 @@ func SetupDatabaseUserWebhookWithManager(mgr ctrl.Manager, godoClient *godo.Clie
 // +kubebuilder:webhook:path=/validate-databases-digitalocean-com-v1alpha1-databaseuser,mutating=false,failurePolicy=fail,sideEffects=None,groups=databases.digitalocean.com,resources=databaseusers,verbs=create;update,versions=v1alpha1,name=vdatabaseuser.kb.io,admissionReviewVersions=v1
 type DatabaseUserValidator struct{}
 
-var _ webhook.CustomValidator = &DatabaseUserValidator{}
-
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
-func (v *DatabaseUserValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	user, ok := obj.(*v1alpha1.DatabaseUser)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseUser object but got %T", obj)
-	}
-
+func (v *DatabaseUserValidator) ValidateCreate(ctx context.Context, user *v1alpha1.DatabaseUser) (warnings admission.Warnings, err error) {
 	databaseuserlog.Info("validate create", "name", user.Name)
 
 	clusterPath := field.NewPath("spec").Child("cluster")
@@ -118,15 +108,7 @@ func (v *DatabaseUserValidator) ValidateCreate(ctx context.Context, obj runtime.
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
-func (v *DatabaseUserValidator) ValidateUpdate(ctx context.Context, objOld, objNew runtime.Object) (warnings admission.Warnings, err error) {
-	oldUser, ok := objOld.(*v1alpha1.DatabaseUser)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseUser old object but got %T", objOld)
-	}
-	newUser, ok := objNew.(*v1alpha1.DatabaseUser)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseUser new object but got %T", objNew)
-	}
+func (v *DatabaseUserValidator) ValidateUpdate(ctx context.Context, oldUser, newUser *v1alpha1.DatabaseUser) (warnings admission.Warnings, err error) {
 	databaseuserlog.Info("validate update", "name", newUser.Name)
 
 	usernamePath := field.NewPath("spec").Child("username")
@@ -142,12 +124,7 @@ func (v *DatabaseUserValidator) ValidateUpdate(ctx context.Context, objOld, objN
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
-func (v *DatabaseUserValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	user, ok := obj.(*v1alpha1.DatabaseUser)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseUser object but got %T", obj)
-	}
-
+func (v *DatabaseUserValidator) ValidateDelete(ctx context.Context, user *v1alpha1.DatabaseUser) (warnings admission.Warnings, err error) {
 	databaseuserlog.Info("validate delete", "name", user.Name)
 	return warnings, nil
 }
