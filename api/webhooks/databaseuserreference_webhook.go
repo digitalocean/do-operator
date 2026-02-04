@@ -30,12 +30,10 @@ import (
 	"github.com/digitalocean/godo"
 	"github.com/google/go-cmp/cmp"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 // log is for logging in this package.
@@ -45,8 +43,7 @@ func SetupDatabaseUserReferenceWebhookWithManager(mgr ctrl.Manager, godoClient *
 	initGlobalGodoClient(godoClient)
 	initGlobalK8sClient(mgr.GetClient())
 
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(&v1alpha1.DatabaseUserReference{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.DatabaseUserReference{}).
 		WithValidator(&DatabaseUserReferenceValidator{}).
 		Complete()
 }
@@ -54,15 +51,8 @@ func SetupDatabaseUserReferenceWebhookWithManager(mgr ctrl.Manager, godoClient *
 // +kubebuilder:webhook:path=/validate-databases-digitalocean-com-v1alpha1-databaseuserreference,mutating=false,failurePolicy=fail,sideEffects=None,groups=databases.digitalocean.com,resources=databaseuserreferences,verbs=create;update,versions=v1alpha1,name=vdatabaseuserreference.kb.io,admissionReviewVersions=v1
 type DatabaseUserReferenceValidator struct{}
 
-var _ webhook.CustomValidator = &DatabaseUserReferenceValidator{}
-
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
-func (v *DatabaseUserReferenceValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	ref, ok := obj.(*v1alpha1.DatabaseUserReference)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseUserReference object but got %T", obj)
-	}
-
+func (v *DatabaseUserReferenceValidator) ValidateCreate(ctx context.Context, ref *v1alpha1.DatabaseUserReference) (warnings admission.Warnings, err error) {
 	databaseuserreferencelog.Info("validate create", "name", ref.Name)
 
 	clusterPath := field.NewPath("spec").Child("cluster")
@@ -138,16 +128,7 @@ func (v *DatabaseUserReferenceValidator) ValidateCreate(ctx context.Context, obj
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
-func (v *DatabaseUserReferenceValidator) ValidateUpdate(ctx context.Context, objOld, objNew runtime.Object) (warnings admission.Warnings, err error) {
-	oldRef, ok := objOld.(*v1alpha1.DatabaseUserReference)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseUserReference object but got %T", objOld)
-	}
-	newRef, ok := objNew.(*v1alpha1.DatabaseUserReference)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseUserReference object but got %T", objNew)
-	}
-
+func (v *DatabaseUserReferenceValidator) ValidateUpdate(ctx context.Context, oldRef, newRef *v1alpha1.DatabaseUserReference) (warnings admission.Warnings, err error) {
 	databaseuserreferencelog.Info("validate update", "name", newRef.Name)
 
 	usernamePath := field.NewPath("spec").Child("username")
@@ -163,12 +144,7 @@ func (v *DatabaseUserReferenceValidator) ValidateUpdate(ctx context.Context, obj
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
-func (v *DatabaseUserReferenceValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	ref, ok := obj.(*v1alpha1.DatabaseUserReference)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseUserReference object but got %T", obj)
-	}
-
+func (v *DatabaseUserReferenceValidator) ValidateDelete(ctx context.Context, ref *v1alpha1.DatabaseUserReference) (warnings admission.Warnings, err error) {
 	databaseuserreferencelog.Info("validate delete", "name", ref.Name)
 
 	return warnings, nil

@@ -25,11 +25,9 @@ import (
 
 	"github.com/digitalocean/do-operator/api/v1alpha1"
 	"github.com/digitalocean/godo"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -39,8 +37,7 @@ var databaseclusterlog = logf.Log.WithName("databasecluster-resource")
 func SetupDatabaseClusterWebhookWithManager(mgr ctrl.Manager, godoClient *godo.Client) error {
 	initGlobalGodoClient(godoClient)
 
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(&v1alpha1.DatabaseCluster{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.DatabaseCluster{}).
 		WithValidator(&DatabaseClusterValidator{}).
 		Complete()
 }
@@ -48,15 +45,8 @@ func SetupDatabaseClusterWebhookWithManager(mgr ctrl.Manager, godoClient *godo.C
 // +kubebuilder:webhook:path=/validate-databases-digitalocean-com-v1alpha1-databasecluster,mutating=false,failurePolicy=fail,sideEffects=None,groups=databases.digitalocean.com,resources=databaseclusters,verbs=create;update,versions=v1alpha1,name=vdatabasecluster.kb.io,admissionReviewVersions=v1
 type DatabaseClusterValidator struct{}
 
-var _ webhook.CustomValidator = &DatabaseClusterValidator{}
-
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
-func (v *DatabaseClusterValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	cluster, ok := obj.(*v1alpha1.DatabaseCluster)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseCluster object but got %T", obj)
-	}
-
+func (v *DatabaseClusterValidator) ValidateCreate(ctx context.Context, cluster *v1alpha1.DatabaseCluster) (warnings admission.Warnings, err error) {
 	databaseclusterlog.Info("validate create", "name", cluster.Name)
 
 	godoReq := cluster.Spec.ToGodoValidateCreateRequest()
@@ -132,16 +122,7 @@ func (v *DatabaseClusterValidator) ValidateCreate(ctx context.Context, obj runti
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
-func (v *DatabaseClusterValidator) ValidateUpdate(ctx context.Context, objOld, objNew runtime.Object) (warnings admission.Warnings, err error) {
-	oldCluster, ok := objOld.(*v1alpha1.DatabaseCluster)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseCluster old object but got %T", objOld)
-	}
-	newCluster, ok := objNew.(*v1alpha1.DatabaseCluster)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseCluster new object but got %T", objNew)
-	}
-
+func (v *DatabaseClusterValidator) ValidateUpdate(ctx context.Context, oldCluster, newCluster *v1alpha1.DatabaseCluster) (warnings admission.Warnings, err error) {
 	databaseclusterlog.Info("validate update", "name", newCluster.Name)
 
 	enginePath := field.NewPath("spec").Child("engine")
@@ -207,12 +188,7 @@ func (v *DatabaseClusterValidator) ValidateUpdate(ctx context.Context, objOld, o
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
-func (v *DatabaseClusterValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	cluster, ok := obj.(*v1alpha1.DatabaseCluster)
-	if !ok {
-		return nil, fmt.Errorf("expected a DatabaseCluster object but got %T", obj)
-	}
-
+func (v *DatabaseClusterValidator) ValidateDelete(ctx context.Context, cluster *v1alpha1.DatabaseCluster) (warnings admission.Warnings, err error) {
 	databaseclusterlog.Info("validate delete", "name", cluster.Name)
 	return warnings, nil
 }
