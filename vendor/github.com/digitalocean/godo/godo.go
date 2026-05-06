@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	libraryVersion = "1.173.0"
+	libraryVersion = "1.188.0"
 	defaultBaseURL = "https://api.digitalocean.com/"
 	userAgent      = "godo/" + libraryVersion
 	mediaType      = "application/json"
@@ -78,6 +78,7 @@ type Client struct {
 	Kubernetes          KubernetesService
 	LoadBalancers       LoadBalancersService
 	Monitoring          MonitoringService
+	Security            SecurityService
 	Nfs                 NfsService
 	NfsActions          NfsActionsService
 	OneClick            OneClickService
@@ -99,6 +100,8 @@ type Client struct {
 	VPCs                VPCsService
 	PartnerAttachment   PartnerAttachmentService
 	GradientAI          GradientAIService
+	DedicatedInference  DedicatedInferenceService
+	BatchInference      BatchInferenceService
 	BYOIPPrefixes       BYOIPPrefixesService
 	// Optional function called after every successful request made to the DO APIs
 	onRequestCompleted RequestCompletionCallback
@@ -306,6 +309,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Kubernetes = &KubernetesServiceOp{client: c}
 	c.LoadBalancers = &LoadBalancersServiceOp{client: c}
 	c.Monitoring = &MonitoringServiceOp{client: c}
+	c.Security = &SecurityServiceOp{client: c}
 	c.Nfs = &NfsServiceOp{client: c}
 	c.NfsActions = &NfsActionsServiceOp{client: c}
 	c.VPCNATGateways = &VPCNATGatewaysServiceOp{client: c}
@@ -329,6 +333,9 @@ func NewClient(httpClient *http.Client) *Client {
 	c.VPCs = &VPCsServiceOp{client: c}
 	c.PartnerAttachment = &PartnerAttachmentServiceOp{client: c}
 	c.GradientAI = &GradientAIServiceOp{client: c}
+	c.DedicatedInference = &DedicatedInferenceServiceOp{client: c}
+	batchInferenceURL, _ := url.Parse(defaultBatchInferenceBaseURL)
+	c.BatchInference = &BatchInferenceServiceOp{client: c, baseURL: batchInferenceURL}
 
 	c.headers = make(map[string]string)
 
