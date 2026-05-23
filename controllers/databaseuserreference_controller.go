@@ -135,6 +135,11 @@ func (r *DatabaseUserReferenceReconciler) reconcileDBUserReference(ctx context.C
 		"user_name", userRef.Spec.Username,
 	)
 
+	db, _, err := r.GodoClient.Databases.Get(ctx, clusterUUID)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("looking up DB cluster: %v", err)
+	}
+
 	// The validating webhook checks that the user exists, so normally this
 	// should work. However, the user could have been deleted in which case
 	// we'll fail and back off in case it gets re-created.
@@ -145,7 +150,7 @@ func (r *DatabaseUserReferenceReconciler) reconcileDBUserReference(ctx context.C
 
 	userRef.Status.Role = dbUser.Role
 
-	err = r.ensureOwnedObjects(ctx, userRef, dbUser)
+	err = r.ensureOwnedObjects(ctx, db, userRef, dbUser)
 	if err != nil {
 		ll.Error(err, "unable to ensure user-related objects")
 		return ctrl.Result{}, fmt.Errorf("ensuring user-related objects: %v", err)
@@ -154,8 +159,11 @@ func (r *DatabaseUserReferenceReconciler) reconcileDBUserReference(ctx context.C
 	return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil
 }
 
-func (r *DatabaseUserReferenceReconciler) ensureOwnedObjects(ctx context.Context, userRef *v1alpha1.DatabaseUserReference, dbUser *godo.DatabaseUser) error {
-	obj := credentialsSecretForDBUser(userRef, dbUser)
+func (r *DatabaseUserReferenceReconciler) ensureOwnedObjects(ctx context.Context, db *godo.Database, userRef *v1alpha1.DatabaseUserReference, dbUser *godo.DatabaseUser) error {
+	obj, err := credentialsSecretForDBUser(db, userRef, dbUser)
+	if err != nil {
+		return fmt.Errorf("creating secrett: %s", err)
+	}
 	controllerutil.SetControllerReference(userRef, obj, r.Scheme)
 	if err := r.Patch(ctx, obj, client.Apply, client.ForceOwnership, client.FieldOwner("do-operator")); err != nil {
 		return fmt.Errorf("applying object %s: %s", client.ObjectKeyFromObject(obj), err)

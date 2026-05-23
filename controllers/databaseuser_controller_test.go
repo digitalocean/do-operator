@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/digitalocean/do-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -89,6 +91,8 @@ var _ = Describe("DatabaseUser controller", func() {
 				Expect(secret.OwnerReferences).To(ContainElement(dbUserOwnerReference))
 				Expect(string(secret.Data["username"])).To(Equal(userName))
 				Expect(secret.Data["password"]).NotTo(BeEmpty())
+				Expect(string(secret.Data["uri"])).To(Equal(fmt.Sprintf("postgresql://%s:%s@host:12345/database?sslmode=require", secret.Data["username"], secret.Data["password"])))
+				Expect(string(secret.Data["private_uri"])).To(Equal(fmt.Sprintf("postgresql://%s:%s@private-host:12345/private-database?sslmode=require", secret.Data["username"], secret.Data["password"])))
 			})
 
 			By("deleting the DatabaseUser object", func() {
@@ -184,6 +188,8 @@ var _ = Describe("DatabaseUser controller", func() {
 				Expect(secret.OwnerReferences).To(ContainElement(dbUserOwnerReference))
 				Expect(string(secret.Data["username"])).To(Equal(userName))
 				Expect(secret.Data["password"]).NotTo(BeEmpty())
+				Expect(string(secret.Data["uri"])).To(Equal(fmt.Sprintf("postgresql://%s:%s@host:12345/database?sslmode=require", secret.Data["username"], secret.Data["password"])))
+				Expect(string(secret.Data["private_uri"])).To(Equal(fmt.Sprintf("postgresql://%s:%s@private-host:12345/private-database?sslmode=require", secret.Data["username"], secret.Data["password"])))
 			})
 
 			By("deleting the DatabaseUser object", func() {
