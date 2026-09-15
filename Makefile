@@ -113,6 +113,9 @@ release-manifests: manifests kustomize
 # replace the fake do api token cause GitGuardian thinks every base64-encoded string is a secret
 	sed -i -e 's/access-token\:\s.*/access-token: <your api token here>/g' releases/do-operator-${IMG_TAG}.yaml
 
+.PHONY: release
+release: docker-build docker-push release-manifests ## Build/push image and generate release manifests for IMG_TAG
+
 ##@ Build Dependencies
 
 ## Location to install dependencies to

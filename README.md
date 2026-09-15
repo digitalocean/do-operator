@@ -130,12 +130,17 @@ make uninstall
 4. Create and merge PR
 
 ### Release
-1. Create release manifest files by running `GITHUB_TOKEN=<redacted> IMG_TAG=vX.Y.Z make release-manifests`
-2. Create and merge PR
-3. [Trigger the `release` GitHub action workflow](https://github.com/digitalocean/do-operator/actions/workflows/release.yml)
-    - Draft a new release [here](https://github.com/digitalocean/do-operator/releases) for the new version
-    - Creating a new release will trigger the [release](https://github.com/digitalocean/do-operator/actions/workflows/release.yml) Github Action
-    - Follow the [release](https://github.com/digitalocean/do-operator/actions/workflows/release.yml) Github Action until successful completion.
+To build/push the image, generate release manifests, commit them, and create the GitHub release/tag, go to the actions page and click **Run workflow** on [`release`](https://github.com/digitalocean/do-operator/actions/workflows/release.yml). Provide the tag (e.g. `v0.1.17`).
+
+Running the workflow requires temporarily turning off "Require a pull request before merging" in the [main branch protection rules](https://github.com/digitalocean/do-operator/settings/branches) so the workflow can commit the generated manifests. Turn it back on once the release finishes.
+
+The workflow does the following:
+
+- Logs in to Docker Hub with credentials from secrets
+- Builds and pushes `digitalocean/do-operator:<tag>`
+- Generates `releases/do-operator-<tag>.yaml` and updates `config/manager/kustomization.yaml`
+- Commits those files to `main`
+- Creates a GitHub release and tag for the input `tag`
 
 ## Contributing
 
