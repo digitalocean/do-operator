@@ -1,12 +1,13 @@
 name: release
 on:
   workflow_dispatch:
+    # Inputs the workflow accepts.
     inputs:
       tag:
-        description: 'tag and release to create (e.g. v0.1.17)'
+        # Friendly description to be shown in the UI instead of 'name'
+        description: 'tag and release to create'
+        # Input has to be provided for the workflow to run
         required: true
-permissions:
-  contents: write
 env:
   GITHUB_ENV: ".env"
 jobs:
@@ -23,17 +24,19 @@ jobs:
         run: echo "${{ secrets.DockerHubToken }}" | docker login --username "${DOCKER_USER}" --password-stdin
         env:
           DOCKER_USER: ${{ secrets.DockerHubUser }}
-      - name: Build image, push, and generate release manifests
+      - name: run make release ${{ github.event.inputs.tag }}
         run: make release
         env:
           IMG_TAG: ${{ github.event.inputs.tag }}
-      - name: Commit release manifests
+      - name: commit manifests
         uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           message: "create release manifests for ${{ github.event.inputs.tag }}"
+          # Also pin the controller image tag in config/manager (release-manifests runs kustomize edit).
           add: "releases/ config/manager/kustomization.yaml"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # target commit should be the commit with the new release manifest, not the commit when workflow was triggered
       - name: find target commit to tag
         run: |
           sha="$(git rev-parse HEAD)"
