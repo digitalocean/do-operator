@@ -1,0 +1,63 @@
+name: update-dependencies
+on:
+  workflow_dispatch:
+
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-dependencies:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    
+      - name: Ensure main branch
+      - run: |
+          if ${{ github.ref != 'refs/heads/main'}}; then
+            echo "This workflow can only be run on the main branch."
+            exit 1
+          fi
+          
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install Cursor CLI
+        run: |
+          curl https://cursor.com/install -fsS | bash
+      - name: Verify Cursor CLI
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          agent --version
+
+      - name: Configure git and gh CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "Cursor Agent"
+          git config user.email "cursoragent@cursor.com"
+          gh auth status
+          gh api repos/${{ github.repository }} --jq '.full_name'
+
+      - name: Install go
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        with:
+          go-version: ^1.26
+
+      - name: Update the repo
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          MODEL: claude-4.5-sonnet
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          agent --force --model "$MODEL" --output-format=text --print '
+          You are operating in a GitHub Actions runner performing automated upgrade of the current repo ${{ github.repository }}.
+          The gh CLI is available and authenticated via GH_TOKEN.
+          Follow the instructions in the "Update Go and dependencies" section of README.md.
+          If there are build errors or test failures, fix them and run the tests again.
+          Upon completion, create a PR against the main branch titled "chore: automated update of go and dependencies" with the changes.
+          Tag @digitalocean/doks for review.
+          Do not merge the PR.
+          '
