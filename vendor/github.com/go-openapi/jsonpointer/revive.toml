@@ -13,6 +13,6 @@ enable-default-rules = true
 [rule.exported]
 disabled = true
 [rule.cyclomatic]
-arguments = [25]
+arguments = [20]
 [rule.cognitive-complexity]
-arguments = [25]
+arguments = [20]
